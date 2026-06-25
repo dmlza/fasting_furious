@@ -129,12 +129,36 @@ CREATE POLICY "Users can update their own timers"
   ON active_timers FOR UPDATE
   USING (auth.uid() = user_id);
 
--- 6. Enable realtime for notifications and posts
+-- 6. Reactions (Kudos on posts)
+CREATE TABLE reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, post_id)
+);
+
+ALTER TABLE reactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can see reactions"
+  ON reactions FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can add their own reactions"
+  ON reactions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can remove their own reactions"
+  ON reactions FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- 8. Enable realtime for notifications, posts, and reactions
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ALTER PUBLICATION supabase_realtime ADD TABLE posts;
 ALTER PUBLICATION supabase_realtime ADD TABLE friendships;
+ALTER PUBLICATION supabase_realtime ADD TABLE reactions;
 
--- 7. Auto-create profile on signup
+-- 9. Auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
