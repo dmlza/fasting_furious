@@ -48,7 +48,7 @@ export class NotificationManager {
 
   subscribe() {
     const channel = supabase
-      .channel('notifications')
+      .channel('notifications-' + this.userId)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',

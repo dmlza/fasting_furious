@@ -95,7 +95,7 @@ function renderNav() {
 }
 
 function initNotifManager() {
-  if (notifManager) notifManager.destroy()
+  if (notifManager) return
   notifManager = new NotificationManager(currentUser.id, app)
 }
 
