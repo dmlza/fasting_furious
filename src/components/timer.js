@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase.js'
 
-export async function renderTimers(container, user, { navigate }) {
+export async function renderTimers(container, user) {
   container.innerHTML = `
     <div class="page fade-in">
       <h2 style="margin-bottom:16px">⏱️ Timer</h2>
@@ -243,7 +243,6 @@ export async function renderTimers(container, user, { navigate }) {
     }
 
     el.innerHTML = timers.map(t => {
-      const elapsed = Math.floor((new Date(t.started_at).getTime()) / 1000)
       const duration = t.target_minutes
       const label = t.type === 'fasting' ? '🍽️ Fast' : '💪 Workout'
       return `

@@ -14,11 +14,21 @@ export async function renderProfile(container, currentUser, { params, navigate }
     .from('profiles')
     .select('*')
     .eq('id', profileId)
-    .single()
+    .maybeSingle()
 
   if (!profile) {
     container.innerHTML = '<div class="page"><div class="empty-state">Profile not found</div></div>'
     return
+  }
+
+  let currentProfile = profile
+  if (!isOwn) {
+    const { data: myProfile } = await supabase
+      .from('profiles')
+      .select('display_name, username')
+      .eq('id', currentUser.id)
+      .maybeSingle()
+    if (myProfile) currentProfile = myProfile
   }
 
   const { count: friendCount } = await supabase
@@ -138,7 +148,7 @@ export async function renderProfile(container, currentUser, { params, navigate }
           user_id: profileId,
           from_user_id: currentUser.id,
           type: 'friend_request',
-          message: `${profile.display_name || profile.username} sent you a friend request`
+          message: `${currentProfile.display_name || currentProfile.username} sent you a friend request`
         })
         renderProfile(container, currentUser, { params, navigate })
       }
@@ -152,7 +162,7 @@ export async function renderProfile(container, currentUser, { params, navigate }
           user_id: profileId,
           from_user_id: currentUser.id,
           type: 'friend_accept',
-          message: `${profile.display_name || profile.username} accepted your friend request`
+          message: `${currentProfile.display_name || currentProfile.username} accepted your friend request`
         })
         renderProfile(container, currentUser, { params, navigate })
       }

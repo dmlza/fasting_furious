@@ -62,6 +62,7 @@ export class NotificationManager {
         if (this.open) this.renderPanel()
       })
       .subscribe()
+    this.subscription = channel
   }
 
   updateBadge() {

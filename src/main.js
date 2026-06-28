@@ -65,7 +65,7 @@ async function navigate(path) {
 
 function updateNavActive(path) {
   document.querySelectorAll('.nav a').forEach(a => {
-    const href = a.getAttribute('href')
+    const href = a.getAttribute('href').replace(/^#/, '')
     a.classList.toggle('active', href === path || (path.startsWith('/profile') && href === '/profile'))
   })
 }
@@ -74,19 +74,19 @@ function renderNav() {
   const nav = document.createElement('nav')
   nav.className = 'nav'
   nav.innerHTML = `
-    <a href="/">
+    <a href="#/">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h2l2-5 3 10 3-10 2 5h2"/></svg>
       Feed
     </a>
-    <a href="/timers">
+    <a href="#/timers">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
       Timer
     </a>
-    <a href="/friends">
+    <a href="#/friends">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Friends
     </a>
-    <a href="/profile">
+    <a href="#/profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Profile
     </a>

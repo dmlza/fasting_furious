@@ -191,12 +191,18 @@ export async function renderFeed(container, user, { navigate }) {
         duration = parseInt(document.getElementById('composer-duration').value) || null
       }
 
-      await supabase.from('posts').insert({
+      const { error } = await supabase.from('posts').insert({
         user_id: user.id,
         type: selectedType,
         content,
         duration_minutes: duration,
       })
+
+      if (error) {
+        btn.disabled = false
+        btn.textContent = 'Post'
+        return
+      }
 
       closeComposer()
       await buildCardData()
@@ -472,7 +478,12 @@ function timeAgo(dateStr) {
 function attachKudosHandlers() {
   document.querySelectorAll('.kudos-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const postIds = JSON.parse(btn.dataset.posts)
+      let postIds
+      try {
+        postIds = JSON.parse(btn.dataset.posts)
+      } catch {
+        return
+      }
       const userId = btn.dataset.user
       if (!postIds.length) return
 
