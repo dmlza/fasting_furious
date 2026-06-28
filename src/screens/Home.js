@@ -25,6 +25,7 @@ export async function renderHome(container, user) {
       <div class="bento-grid">
 
         <div class="hero-card" id="hero-card">
+          <button class="science-trigger" id="fasting-science-btn" title="Fasting Science">🧪</button>
           <div class="hero-card-body">
             <div class="hero-left">
               <div class="live-timer" id="timer-display">--:--:--</div>
@@ -44,11 +45,11 @@ export async function renderHome(container, user) {
             <div class="hero-right">
               <div class="activity-rings" id="activity-rings">
                 <svg viewBox="0 0 180 180">
-                  <circle class="ring-bg" cx="90" cy="90" r="82" stroke="#E8E3DC" stroke-width="6" fill="none"/>
+                  <circle class="ring-bg" cx="90" cy="90" r="82" fill="none"/>
                   <circle class="ring-fg ring-fg-outer" id="ring-outer" cx="90" cy="90" r="82" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="515"/>
-                  <circle class="ring-bg" cx="90" cy="90" r="68" stroke="rgba(0,0,0,0.06)" stroke-width="6" fill="none"/>
+                  <circle class="ring-bg" cx="90" cy="90" r="68" fill="none"/>
                   <circle class="ring-fg ring-fg-mid" id="ring-mid" cx="90" cy="90" r="68" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="427"/>
-                  <circle class="ring-bg" cx="90" cy="90" r="54" stroke="rgba(0,0,0,0.06)" stroke-width="6" fill="none"/>
+                  <circle class="ring-bg" cx="90" cy="90" r="54" fill="none"/>
                   <circle class="ring-fg ring-fg-inner" id="ring-inner" cx="90" cy="90" r="54" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="339"/>
                 </svg>
               </div>
@@ -58,9 +59,10 @@ export async function renderHome(container, user) {
 
         <div class="bento-row">
           <div class="bento-card sugar-card" id="sugar-card">
+            <button class="science-trigger-card" id="sugar-science-btn" title="Milestone Roadmap">🧪</button>
             <div class="streak-display" id="sugar-streak">🔥 --</div>
             <div class="streak-label">No Sugar Streak</div>
-            <div class="streak-sub">Tap to view history</div>
+            <div class="streak-sub">Tap to view calendar</div>
           </div>
           <div class="bento-card exercise-card" id="exercise-card">
             <div class="exercise-head">
@@ -126,8 +128,19 @@ export async function renderHome(container, user) {
       updateRings()
     })
 
-    document.getElementById('sugar-card').addEventListener('click', () => {
-      openContributionModal(history)
+    document.getElementById('sugar-card').addEventListener('click', (e) => {
+      if (e.target.closest('.science-trigger-card')) return
+      openContinuityCalendar(history)
+    })
+
+    document.getElementById('fasting-science-btn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      openFastingScience()
+    })
+
+    document.getElementById('sugar-science-btn').addEventListener('click', (e) => {
+      e.stopPropagation()
+      openSugarMilestones()
     })
   }
 
@@ -141,38 +154,155 @@ export async function renderHome(container, user) {
     return streak
   }
 
-  function openContributionModal(history) {
+  function openFastingScience() {
+    const timer = useStore.getState().activeTimer
+    const elapsedH = timer
+      ? (Date.now() - new Date(timer.started_at).getTime()) / 1000 / 60 / 60
+      : 0
+    const stages = [
+      { range: [0, 4], label: 'Blood Sugar Rise / Decline', icon: '🩸', key: 'bloodSugar' },
+      { range: [5, 12], label: 'Gluconeogenesis', icon: '⚡', key: 'gluconeogenesis' },
+      { range: [13, 16], label: 'Autophagy Phase', icon: '🔄', key: 'autophagy' },
+    ]
+
     const overlay = document.createElement('div')
     overlay.className = 'modal-overlay'
     overlay.innerHTML = `
-      <div class="modal-content contribution-modal">
-        <button class="close-modal" id="close-contrib">&times;</button>
-        <h3>📅 Sugar-Free History</h3>
-        <div class="contrib-grid" id="contrib-grid"></div>
+      <div class="modal-content science-modal">
+        <button class="close-modal" id="close-science">&times;</button>
+        <h3>🧪 Fasting Science Timeline</h3>
+        ${stages.map(s => {
+          const completed = elapsedH >= s.range[1]
+          const active = elapsedH >= s.range[0] && elapsedH < s.range[1]
+          const locked = elapsedH < s.range[0]
+          const cls = completed ? 'completed' : active ? 'active' : 'locked'
+          const status = completed ? '✅' : active ? '○' : '🔒'
+          return `
+            <div class="science-stage ${cls}">
+              <span class="stage-icon">${s.icon}</span>
+              <div class="stage-info">
+                <div class="stage-title">${s.label}</div>
+                <div class="stage-desc">Hours ${s.range[0]}–${s.range[1]}</div>
+              </div>
+              <span class="stage-status">${status}</span>
+            </div>
+          `
+        }).join('')}
       </div>
     `
     document.body.appendChild(overlay)
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+    overlay.querySelector('#close-science').addEventListener('click', () => overlay.remove())
+  }
 
-    const grid = overlay.querySelector('#contrib-grid')
-    const weeks = 13
+  function openSugarMilestones() {
+    const state = useStore.getState()
+    const streak = getStreak('no_sugar', state.habitHistory)
+    const milestones = [
+      { range: [1, 3], label: 'The Withdrawal Phase', icon: '⚡', desc: 'Cravings peak, energy dips' },
+      { range: [4, 7], label: 'Stabilization', icon: '⚖️', desc: 'Blood sugar normalizes' },
+      { range: [8, 14], label: 'The Gut & Skin Glow', icon: '✨', desc: 'Digestion improves, skin clears' },
+      { range: [15, 30], label: 'Fat Burning & Habit Shift', icon: '🔥', desc: 'Deep metabolic adaptation' },
+    ]
+
+    const overlay = document.createElement('div')
+    overlay.className = 'modal-overlay'
+    overlay.innerHTML = `
+      <div class="modal-content milestone-modal">
+        <button class="close-modal" id="close-milestone">&times;</button>
+        <h3>🧪 No Sugar Milestone Roadmap</h3>
+        ${milestones.map(m => {
+          const completed = streak >= m.range[1]
+          const active = streak >= m.range[0] && streak < m.range[1]
+          const locked = streak < m.range[0]
+          const cls = completed ? 'completed' : active ? 'active' : 'locked'
+          return `
+            <div class="milestone-stage ${cls}">
+              <span class="milestone-icon">${m.icon}</span>
+              <div class="milestone-info">
+                <div class="milestone-title">${m.label}</div>
+                <div class="milestone-desc">Days ${m.range[0]}–${m.range[1]} — ${m.desc}</div>
+              </div>
+              <span class="milestone-check">${completed ? '✅' : locked ? '<span class="milestone-lock-icon">🔒</span>' : '○'}</span>
+            </div>
+          `
+        }).join('')}
+      </div>
+    `
+    document.body.appendChild(overlay)
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
+    overlay.querySelector('#close-milestone').addEventListener('click', () => overlay.remove())
+  }
+
+  function openContinuityCalendar(history) {
+    const fullscreen = document.createElement('div')
+    fullscreen.className = 'calendar-fullscreen fade-in'
+    const weeks = 52
     const days = weeks * 7
-    const cells = []
-
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date()
-      d.setDate(d.getDate() - i)
-      const dateStr = d.toISOString().split('T')[0]
-      const entry = history.find(h => h.date === dateStr)
-      const done = entry?.no_sugar || false
-      cells.push(`<div class="contrib-cell ${done ? 'filled' : ''}" title="${dateStr}"></div>`)
+    const now = new Date()
+    const monthLabels = []
+    for (let w = 0; w < weeks; w++) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - (days - w * 7))
+      const mon = d.toLocaleString('en', { month: 'short' })
+      monthLabels.push(w % 4 === 0 ? mon : '')
     }
 
-    grid.innerHTML = cells.join('')
+    let cells = '<div class="calendar-label"></div>'
+    cells += monthLabels.map(m => `<div class="calendar-label">${m}</div>`).join('')
 
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) overlay.remove()
-    })
-    overlay.querySelector('#close-contrib').addEventListener('click', () => overlay.remove())
+    for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+      const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+      cells += `<div class="calendar-label">${dayNames[dayOfWeek]}</div>`
+      for (let w = 0; w < weeks; w++) {
+        const dayOffset = (weeks - 1 - w) * 7 + dayOfWeek
+        const d = new Date(now)
+        d.setDate(d.getDate() - (days - 1 - dayOffset))
+        const dateStr = d.toISOString().split('T')[0]
+        const entry = history.find(h => h.date === dateStr)
+        const val = entry?.no_sugar ? 1 : 0
+        let intensity = 0
+        if (val > 0) {
+          const streak = getStreakAtDate('no_sugar', history, dateStr)
+          if (streak <= 3) intensity = 1
+          else if (streak <= 7) intensity = 2
+          else intensity = 3
+        }
+        cells += `<div class="calendar-cell intensity-${intensity}" title="${dateStr}"></div>`
+      }
+    }
+
+    fullscreen.innerHTML = `
+      <div class="calendar-header">
+        <h2>📅 No Sugar — 52-Week Continuity</h2>
+        <button id="close-calendar">&times;</button>
+      </div>
+      <div class="calendar-scroll">
+        <div class="calendar-grid">${cells}</div>
+        <div class="calendar-legend">
+          <span style="font-size:11px;color:var(--text-muted)">Rest</span>
+          <div class="calendar-legend-item" style="background:var(--surface2)"></div>
+          <div class="calendar-legend-item" style="background:rgba(245,158,11,0.25)"></div>
+          <div class="calendar-legend-item" style="background:rgba(245,158,11,0.60)"></div>
+          <div class="calendar-legend-item" style="background:var(--amber)"></div>
+          <span style="font-size:11px;color:var(--text-muted)">Streak</span>
+        </div>
+      </div>
+    `
+    document.body.appendChild(fullscreen)
+    fullscreen.querySelector('#close-calendar').addEventListener('click', () => fullscreen.remove())
+    fullscreen.addEventListener('click', (e) => { if (e.target === fullscreen) fullscreen.remove() })
+  }
+
+  function getStreakAtDate(habit, list, dateStr) {
+    const idx = list.findIndex(h => h.date === dateStr)
+    if (idx === -1 || !list[idx][habit]) return 0
+    let streak = 0
+    for (let i = idx; i >= 0; i--) {
+      if (list[i][habit]) streak++
+      else break
+    }
+    return streak
   }
 
   function initExercise() {
@@ -252,22 +382,21 @@ export async function renderHome(container, user) {
       const elapsed = (Date.now() - started) / 1000 / 60
       const progress = Math.min(elapsed / timer.target_minutes, 1)
       outerRing.style.strokeDashoffset = String(outerCirc * (1 - progress))
-      outerRing.setAttribute('stroke', '#6CB49C')
+      outerRing.setAttribute('stroke', '#6366F1')
     } else {
       outerRing.style.strokeDashoffset = String(outerCirc)
-      outerRing.setAttribute('stroke', '#E8E3DC')
+      outerRing.style.stroke = '#E2E4E9'
     }
 
     const exerciseMin = habits.exercise_minutes || 0
     const exerciseProgress = Math.min(exerciseMin / HABIT_TARGETS.exercise, 1)
     midRing.style.strokeDashoffset = String(midCirc * (1 - exerciseProgress))
-    midRing.setAttribute('stroke', exerciseProgress > 0 ? '#F4DFD4' : '#E8E3DC')
+    midRing.setAttribute('stroke', exerciseProgress > 0 ? '#10B981' : '#E2E4E9')
 
     const sugarStreak = getStreak('no_sugar', state.habitHistory)
-    const smokeStreak = getStreak('no_smoking', state.habitHistory)
-    const habitScore = Math.min((sugarStreak + smokeStreak) / 20, 1)
+    const habitScore = Math.min(sugarStreak / 14, 1)
     innerRing.style.strokeDashoffset = String(innerCirc * (1 - habitScore))
-    innerRing.setAttribute('stroke', habitScore > 0 ? '#DCE7F3' : '#E8E3DC')
+    innerRing.setAttribute('stroke', habitScore > 0 ? '#F59E0B' : '#E2E4E9')
   }
 
   function initTimer() {

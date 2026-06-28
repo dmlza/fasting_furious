@@ -40,7 +40,7 @@ export function renderShareCanvas({ profile, habits, timer }) {
     ctx.fillText(h.label, 120, y + 28)
 
     ctx.font = '13px Inter, sans-serif'
-    ctx.fillStyle = h.done ? '#6CB49C' : '#A39B94'
+    ctx.fillStyle = h.done ? '#6366F1' : '#ADB5BD'
     ctx.fillText(h.done ? '✅ Done' : '⬜ Pending', 120, y + 44)
 
     y += 62

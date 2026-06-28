@@ -151,10 +151,14 @@ export const useStore = createStore((set, get) => ({
       reactionsByPost[r.post_id].push(r)
     })
 
-    const feed = (posts || []).map(p => ({
-      ...p,
-      reactions: reactionsByPost[p.id] || [],
-    }))
+    const feed = (posts || []).map(p => {
+      const postReactions = reactionsByPost[p.id] || []
+      return {
+        ...p,
+        reactions: postReactions,
+        hype_count: postReactions.filter(r => r.emoji === '🔥').length,
+      }
+    })
 
     set({ feed })
   },

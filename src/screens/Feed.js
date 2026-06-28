@@ -4,10 +4,10 @@ import { useStore } from '../store/useStore.js'
 const EMOJIS = ['🔥', '🙌', '💯', '👏', '💪']
 
 const typeConfig = {
-  fasting: { emoji: '🍽️', label: 'Fasting', color: 'sage' },
-  fasting_complete: { emoji: '✅', label: 'Fast Complete', color: 'sage' },
-  exercise: { emoji: '🏃', label: 'Exercise', color: 'terracotta' },
-  workout_complete: { emoji: '🏆', label: 'Workout Done', color: 'terracotta' },
+  fasting: { emoji: '🍽️', label: 'Fasting', color: 'indigo' },
+  fasting_complete: { emoji: '✅', label: 'Fast Complete', color: 'indigo' },
+  exercise: { emoji: '🏃', label: 'Exercise', color: 'emerald' },
+  workout_complete: { emoji: '🏆', label: 'Workout Done', color: 'emerald' },
   general: { emoji: '💬', label: 'Update', color: 'neutral' },
 }
 
@@ -59,6 +59,9 @@ export async function renderFeed(container, user) {
         body = `<strong>${name}</strong> ${post.content}`
       }
 
+      const hypeCount = post.hype_count || 0
+      const userHyped = post.reactions?.some(r => r.user_id === user.id && r.emoji === '🔥') || false
+
       return `
         <div class="status-card ${cfg.color} fade-in" data-post-id="${post.id}">
           <div class="status-card-header">
@@ -78,6 +81,9 @@ export async function renderFeed(container, user) {
               `
             }).join('')}
           </div>
+          <button class="hype-btn ${userHyped ? 'active' : ''}" data-post="${post.id}">
+            🔥 Send Hype${hypeCount > 0 ? `<span class="hype-count">${hypeCount}</span>` : ''}
+          </button>
         </div>
       `
     }).join('')
@@ -138,6 +144,54 @@ export async function renderFeed(container, user) {
         })
       })
     })
+
+    document.querySelectorAll('.hype-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const postId = btn.dataset.post
+        const store = useStore.getState()
+        const isActive = btn.classList.contains('active')
+
+        if (isActive) {
+          await supabase.from('reactions').delete().eq('user_id', user.id).eq('post_id', postId)
+        } else {
+          await supabase.from('reactions').insert({ user_id: user.id, post_id: postId, emoji: '🔥' })
+          spawnParticles(btn)
+        }
+
+        store.fetchFeed(user.id).then(() => {
+          const list = document.getElementById('feed-list')
+          if (list) list.innerHTML = renderFeedList()
+          attachReactionHandlers()
+        })
+      })
+    })
+  }
+
+  function spawnParticles(btn) {
+    const card = btn.closest('.status-card')
+    if (!card) return
+    const box = card.getBoundingClientRect()
+    const bbox = btn.getBoundingClientRect()
+    const cx = bbox.left - box.left + bbox.width / 2
+    const cy = bbox.top - box.top + bbox.height / 2
+    const container = document.createElement('div')
+    container.className = 'particle-container'
+    card.appendChild(container)
+    const emojis = ['🔥', '🙌', '💪', '✨', '⚡']
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div')
+      p.className = 'particle'
+      const angle = (Math.PI * 2 * i) / 12
+      const dist = 60 + Math.random() * 80
+      p.style.cssText = `
+        left:${cx}px; top:${cy}px;
+        background:${['#FF4757','#FF6B81','#FFA502','#FF4757','#FF6B81'][i % 5]};
+        --dx:${Math.cos(angle) * dist}px;
+        --dy:${Math.sin(angle) * dist}px;
+      `
+      container.appendChild(p)
+    }
+    setTimeout(() => container.remove(), 1000)
   }
 
   return () => {
@@ -169,7 +223,7 @@ function dh(minutes) {
 }
 
 function avatarColor(name) {
-  const colors = ['#6CB49C', '#C4B8D8', '#EDB8B8', '#EDD9A8', '#A8C8E0']
+  const colors = ['#6366F1', '#F59E0B', '#10B981', '#EF4444', '#ADB5BD']
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
   return colors[Math.abs(hash) % colors.length]
