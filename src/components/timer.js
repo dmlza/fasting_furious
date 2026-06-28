@@ -51,7 +51,7 @@ export async function renderTimers(container, user) {
     currentType = 'fasting'
     document.getElementById('timer-type-fasting').className = 'active'
     document.getElementById('timer-type-workout').className = 'workout-btn'
-    document.getElementById('timer-target').value = localStorage.getItem('ff_last_fasting') || '60'
+    document.getElementById('timer-target').value = localStorage.getItem('ff_last_fasting') || '16'
     updateTimerUI()
   })
 

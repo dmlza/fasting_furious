@@ -54,8 +54,13 @@ export class NotificationManager {
         schema: 'public',
         table: 'notifications',
         filter: `user_id=eq.${this.userId}`
-      }, (payload) => {
-        const newNotif = payload.new
+      }, async (payload) => {
+        const { data: fromUser } = await supabase
+          .from('profiles')
+          .select('username, display_name')
+          .eq('id', payload.new.from_user_id)
+          .single()
+        const newNotif = { ...payload.new, from_user: fromUser || null }
         this.notifications.unshift(newNotif)
         this.unreadCount++
         this.updateBadge()
