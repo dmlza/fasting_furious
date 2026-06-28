@@ -12,6 +12,25 @@ const HABIT_TARGETS = {
   exercise: 30,
 }
 
+const WIDGETS = {
+  fasting: {
+    id: 'fasting', label: 'Fasting Timer', icon: '⏱️', desc: 'Track intermittent fasting windows',
+    gradient: 'from-indigo', removable: false,
+  },
+  no_sugar: {
+    id: 'no_sugar', label: 'No Sugar', icon: '🍬', desc: 'Break free from sugar addiction',
+    gradient: 'from-amber', removable: true,
+  },
+  exercise: {
+    id: 'exercise', label: 'Exercise', icon: '🏃', desc: 'Log daily workout minutes',
+    gradient: 'from-emerald', removable: true,
+  },
+  no_smoking: {
+    id: 'no_smoking', label: 'No Smoking', icon: '🚭', desc: 'Kick the habit for good',
+    gradient: 'from-coral', removable: true,
+  },
+}
+
 export async function renderHome(container, user) {
   const store = useStore.getState()
   store.setUser(user)
@@ -20,128 +39,238 @@ export async function renderHome(container, user) {
   await store.fetchActiveTimer(user.id)
   await store.fetchHabitHistory(user.id)
 
-  container.innerHTML = `
-    <div class="screen fade-in">
-      <div class="bento-grid">
+  render()
 
-        <div class="hero-card" id="hero-card">
-          <button class="science-trigger" id="fasting-science-btn" title="Fasting Science">🧪</button>
-          <div class="hero-card-body">
-            <div class="hero-left">
-              <div class="live-timer" id="timer-display">--:--:--</div>
-              <div class="timer-status" id="timer-phase-label">READY</div>
-              <div class="preset-row" id="timer-presets">
-                ${Object.keys(FASTING_PRESETS).map(p =>
-                  `<button class="preset-pill" data-preset="${p}">${p}</button>`
-                ).join('')}
-              </div>
-              <div class="timer-actions" id="timer-ring-start">
-                <button class="hero-start-btn" id="timer-start-btn">Start Fast</button>
-              </div>
-              <div class="timer-actions hidden" id="timer-ring-active">
-                <button class="hero-stop-btn" id="timer-stop-btn">End Fast</button>
-              </div>
-            </div>
-            <div class="hero-right">
-              <div class="activity-rings" id="activity-rings">
-                <svg viewBox="0 0 180 180">
-                  <circle class="ring-bg" cx="90" cy="90" r="82" fill="none"/>
-                  <circle class="ring-fg ring-fg-outer" id="ring-outer" cx="90" cy="90" r="82" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="515"/>
-                  <circle class="ring-bg" cx="90" cy="90" r="68" fill="none"/>
-                  <circle class="ring-fg ring-fg-mid" id="ring-mid" cx="90" cy="90" r="68" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="427"/>
-                  <circle class="ring-bg" cx="90" cy="90" r="54" fill="none"/>
-                  <circle class="ring-fg ring-fg-inner" id="ring-inner" cx="90" cy="90" r="54" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="339"/>
-                </svg>
-              </div>
-            </div>
+  function render() {
+    const state = useStore.getState()
+    const { gridLayout, isEditingGrid } = state
+
+    const widgets = gridLayout
+      .map(id => WIDGETS[id])
+      .filter(Boolean)
+
+    let gridHTML = widgets.map(w => renderWidget(w)).join('')
+
+    if (isEditingGrid) {
+      const hiddenWidgets = Object.values(WIDGETS).filter(w => w.removable && !gridLayout.includes(w.id))
+      gridHTML += `
+        <div class="challenge-slot" id="add-challenge-btn">
+          <div class="challenge-slot-inner">
+            <span class="challenge-slot-plus">+</span>
+            <span class="challenge-slot-label">Add Challenge</span>
           </div>
         </div>
+      `
+    }
 
-        <div class="bento-row">
-          <div class="bento-card sugar-card" id="sugar-card">
-            <button class="science-trigger-card" id="sugar-science-btn" title="Milestone Roadmap">🧪</button>
-            <div class="streak-display" id="sugar-streak">🔥 --</div>
-            <div class="streak-label">No Sugar Streak</div>
-            <div class="streak-sub">Tap to view calendar</div>
-          </div>
-          <div class="bento-card exercise-card" id="exercise-card">
-            <div class="exercise-head">
-              <span class="exercise-icon">🏃</span>
-              <button class="exercise-add-btn" id="exercise-add-btn">+</button>
-            </div>
-            <div class="exercise-stats" id="exercise-stats">0 / ${HABIT_TARGETS.exercise} min</div>
-            <div class="exercise-label">Today's Workout</div>
-          </div>
+    container.innerHTML = `
+      <div class="screen fade-in">
+        <div class="bento-grid ${isEditingGrid ? 'is-editing' : ''}">
+          ${gridHTML}
         </div>
-
-        <div class="bento-card smoking-card" id="smoking-card">
-          <div class="smoking-left">
-            <div class="streak-display smoke-streak" id="smoking-streak">🔥 --</div>
-            <div class="streak-label">No Smoking Streak</div>
-          </div>
-          <div class="smoking-toggle-wrap">
-            <div class="smoking-toggle" id="smoking-toggle">
-              <div class="smoking-toggle-knob"></div>
-            </div>
-          </div>
+        <div class="edit-grid-bar">
+          <button class="edit-grid-btn ${isEditingGrid ? 'active' : ''}" id="edit-grid-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            ${isEditingGrid ? 'Done Editing' : 'Edit Grid'}
+          </button>
         </div>
-
+        <div class="share-btn-wrap">
+          <button class="share-btn" id="share-status-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Update & Share Status
+          </button>
+          <button class="share-btn photo-checkin-btn" id="photo-checkin-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Photo Check-in
+          </button>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" />
       </div>
+    `
 
-      <div class="share-btn-wrap">
-        <button class="share-btn" id="share-status-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-          Update & Share Status
-        </button>
+    initEditToggle()
+    initTimer()
+    initHabits()
+    initExercise()
+    initShare()
+    updateRings()
+  }
+
+  function renderWidget(w) {
+    if (w.id === 'fasting') return renderHero()
+    if (w.id === 'no_sugar') return renderSugar()
+    if (w.id === 'exercise') return renderExercise()
+    if (w.id === 'no_smoking') return renderSmoking()
+    return ''
+  }
+
+  function renderHero() {
+    return `
+      <div class="hero-card" id="hero-card">
+        <button class="science-trigger" id="fasting-science-btn" title="Fasting Science">🧪</button>
+        <div class="hero-card-body">
+          <div class="hero-left">
+            <div class="live-timer" id="timer-display">--:--:--</div>
+            <div class="timer-status" id="timer-phase-label">READY</div>
+            <div class="preset-row" id="timer-presets">
+              ${Object.keys(FASTING_PRESETS).map(p =>
+                `<button class="preset-pill" data-preset="${p}">${p}</button>`
+              ).join('')}
+            </div>
+            <div class="timer-actions" id="timer-ring-start">
+              <button class="hero-start-btn" id="timer-start-btn">Start Fast</button>
+            </div>
+            <div class="timer-actions hidden" id="timer-ring-active">
+              <button class="hero-stop-btn" id="timer-stop-btn">End Fast</button>
+            </div>
+          </div>
+          <div class="hero-right">
+            <div class="activity-rings" id="activity-rings">
+              <svg viewBox="0 0 180 180">
+                <circle class="ring-bg" cx="90" cy="90" r="82" fill="none"/>
+                <circle class="ring-fg ring-fg-outer" id="ring-outer" cx="90" cy="90" r="82" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="515"/>
+                <circle class="ring-bg" cx="90" cy="90" r="68" fill="none"/>
+                <circle class="ring-fg ring-fg-mid" id="ring-mid" cx="90" cy="90" r="68" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="427"/>
+                <circle class="ring-bg" cx="90" cy="90" r="54" fill="none"/>
+                <circle class="ring-fg ring-fg-inner" id="ring-inner" cx="90" cy="90" r="54" stroke="none" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="339"/>
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  `
+    `
+  }
 
-  initTimer()
-  initHabits()
-  initExercise()
-  initShare()
-  updateRings()
+  function renderSugar() {
+    return `
+      <div class="bento-card sugar-card" id="sugar-card">
+        <button class="science-trigger-card" id="sugar-science-btn" title="Milestone Roadmap">🧪</button>
+        <div class="streak-display" id="sugar-streak">🔥 --</div>
+        <div class="streak-label">No Sugar Streak</div>
+        <div class="micro-progress" id="sugar-progress">
+          <div class="micro-progress-track">
+            <div class="micro-progress-fill" id="sugar-progress-fill" style="width:0%"></div>
+          </div>
+          <span class="micro-progress-label" id="sugar-progress-label">--h til next day</span>
+        </div>
+      </div>
+    `
+  }
+
+  function renderExercise() {
+    return `
+      <div class="bento-card exercise-card" id="exercise-card">
+        <div class="exercise-head">
+          <span class="exercise-icon">🏃</span>
+          <button class="exercise-add-btn" id="exercise-add-btn">+</button>
+        </div>
+        <div class="exercise-stats" id="exercise-stats">0 / ${HABIT_TARGETS.exercise} min</div>
+        <div class="exercise-label">Today's Workout</div>
+      </div>
+    `
+  }
+
+  function renderSmoking() {
+    return `
+      <div class="bento-card smoking-card" id="smoking-card">
+        <div class="smoking-left">
+          <div class="streak-display smoke-streak" id="smoking-streak">🔥 --</div>
+          <div class="streak-label">No Smoking Streak</div>
+        </div>
+        <div class="smoking-toggle-wrap">
+          <div class="smoking-toggle" id="smoking-toggle">
+            <div class="smoking-toggle-knob"></div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  function initEditToggle() {
+    document.getElementById('edit-grid-toggle').addEventListener('click', () => {
+      const store = useStore.getState()
+      store.setEditingGrid(!store.isEditingGrid)
+      render()
+    })
+  }
 
   function initHabits() {
     const state = useStore.getState()
     const history = state.habitHistory
     const habits = state.habits
+    const isEditing = state.isEditingGrid
 
-    const sugarStreak = getStreak('no_sugar', history)
-    document.getElementById('sugar-streak').textContent = `🔥 ${sugarStreak} Day${sugarStreak !== 1 ? 's' : ''}`
+    const sugarEl = document.getElementById('sugar-streak')
+    if (sugarEl) {
+      const sugarStreak = getStreak('no_sugar', history)
+      sugarEl.textContent = `🔥 ${sugarStreak} Day${sugarStreak !== 1 ? 's' : ''}`
+    }
 
-    const smokeStreak = getStreak('no_smoking', history)
-    document.getElementById('smoking-streak').textContent = `🔥 ${smokeStreak} Day${smokeStreak !== 1 ? 's' : ''}`
+    const progFill = document.getElementById('sugar-progress-fill')
+    const progLabel = document.getElementById('sugar-progress-label')
+    if (progFill && progLabel) {
+      const now = new Date()
+      const midnight = new Date(now)
+      midnight.setDate(midnight.getDate() + 1)
+      midnight.setHours(0, 0, 0, 0)
+      const msLeft = midnight.getTime() - now.getTime()
+      const hoursLeft = msLeft / 1000 / 60 / 60
+      const pct = Math.max(0, Math.min(100, ((24 - hoursLeft) / 24) * 100))
+      progFill.style.width = `${pct}%`
+      progLabel.textContent = `${Math.floor(hoursLeft)}h til next day`
+    }
+
+    const smokeStreakEl = document.getElementById('smoking-streak')
+    if (smokeStreakEl) {
+      const smokeStreak = getStreak('no_smoking', history)
+      smokeStreakEl.textContent = `🔥 ${smokeStreak} Day${smokeStreak !== 1 ? 's' : ''}`
+    }
 
     const toggle = document.getElementById('smoking-toggle')
-    if (habits.no_smoking) toggle.classList.add('checked')
+    if (toggle) {
+      if (habits.no_smoking) toggle.classList.add('checked')
+      toggle.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        await useStore.getState().toggleHabit('no_smoking')
+        const updated = useStore.getState().habits
+        toggle.classList.toggle('checked', updated.no_smoking)
+        const newHistory = useStore.getState().habitHistory
+        const s = getStreak('no_smoking', newHistory)
+        const el = document.getElementById('smoking-streak')
+        if (el) el.textContent = `🔥 ${s} Day${s !== 1 ? 's' : ''}`
+        updateRings()
+      })
+    }
 
-    toggle.addEventListener('click', async (e) => {
-      e.stopPropagation()
-      await useStore.getState().toggleHabit('no_smoking')
-      const updated = useStore.getState().habits
-      toggle.classList.toggle('checked', updated.no_smoking)
-      const newHistory = useStore.getState().habitHistory
-      const s = getStreak('no_smoking', newHistory)
-      document.getElementById('smoking-streak').textContent = `🔥 ${s} Day${s !== 1 ? 's' : ''}`
-      updateRings()
-    })
+    const sugarCard = document.getElementById('sugar-card')
+    if (sugarCard) {
+      sugarCard.addEventListener('click', (e) => {
+        if (e.target.closest('.science-trigger-card')) return
+        if (isEditing) return
+        openContinuityCalendar(history)
+      })
+    }
 
-    document.getElementById('sugar-card').addEventListener('click', (e) => {
-      if (e.target.closest('.science-trigger-card')) return
-      openContinuityCalendar(history)
-    })
+    const scienceBtn = document.getElementById('fasting-science-btn')
+    if (scienceBtn) {
+      scienceBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        openFastingScience()
+      })
+    }
 
-    document.getElementById('fasting-science-btn').addEventListener('click', (e) => {
-      e.stopPropagation()
-      openFastingScience()
-    })
+    const sugarScienceBtn = document.getElementById('sugar-science-btn')
+    if (sugarScienceBtn) {
+      sugarScienceBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        openSugarMilestones()
+      })
+    }
 
-    document.getElementById('sugar-science-btn').addEventListener('click', (e) => {
-      e.stopPropagation()
-      openSugarMilestones()
-    })
+    const addBtn = document.getElementById('add-challenge-btn')
+    if (addBtn) {
+      addBtn.addEventListener('click', openChallengeDrawer)
+    }
   }
 
   function getStreak(habit, list) {
@@ -152,6 +281,47 @@ export async function renderHome(container, user) {
       else break
     }
     return streak
+  }
+
+  function openChallengeDrawer() {
+    const state = useStore.getState()
+    const { gridLayout } = state
+    const hidden = Object.values(WIDGETS).filter(w => w.removable && !gridLayout.includes(w.id))
+
+    const overlay = document.createElement('div')
+    overlay.className = 'modal-overlay'
+    overlay.innerHTML = `
+      <div class="modal-content challenge-drawer">
+        <div class="challenge-drawer-handle"></div>
+        <h3>⚡ Choose Your Challenge</h3>
+        <p class="challenge-drawer-sub">Pick a habit to add to your dashboard. Each challenge tracks your streak and progress.</p>
+        <div class="challenge-list">
+          ${hidden.length === 0 ? '<div class="challenge-empty">All challenges active! 🎯</div>' :
+            hidden.map(w => `
+              <button class="challenge-card" data-id="${w.id}">
+                <span class="challenge-card-icon">${w.icon}</span>
+                <div class="challenge-card-body">
+                  <div class="challenge-card-title">${w.label}</div>
+                  <div class="challenge-card-desc">${w.desc}</div>
+                </div>
+                <span class="challenge-card-add">+</span>
+              </button>
+            `).join('')
+          }
+        </div>
+      </div>
+    `
+    document.body.appendChild(overlay)
+
+    overlay.querySelectorAll('.challenge-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id
+        useStore.getState().mountHabit(id)
+        overlay.remove()
+        render()
+      })
+    })
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove() })
   }
 
   function openFastingScience() {
@@ -308,16 +478,25 @@ export async function renderHome(container, user) {
   function initExercise() {
     const state = useStore.getState()
     const minutes = state.habits.exercise_minutes || 0
-    document.getElementById('exercise-stats').textContent = `${minutes} / ${HABIT_TARGETS.exercise} min`
+    const el = document.getElementById('exercise-stats')
+    if (el) el.textContent = `${minutes} / ${HABIT_TARGETS.exercise} min`
 
-    document.getElementById('exercise-add-btn').addEventListener('click', (e) => {
-      e.stopPropagation()
-      openExerciseModal()
-    })
+    const addBtn = document.getElementById('exercise-add-btn')
+    if (addBtn) {
+      addBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        if (state.isEditingGrid) return
+        openExerciseModal()
+      })
+    }
 
-    document.getElementById('exercise-card').addEventListener('click', () => {
-      openExerciseModal()
-    })
+    const card = document.getElementById('exercise-card')
+    if (card) {
+      card.addEventListener('click', () => {
+        if (state.isEditingGrid) return
+        openExerciseModal()
+      })
+    }
   }
 
   function openExerciseModal() {
@@ -346,7 +525,8 @@ export async function renderHome(container, user) {
       await store.fetchHabitHistory(store.user.id)
       const updated = useStore.getState().habits
       const total = updated.exercise_minutes || 0
-      document.getElementById('exercise-stats').textContent = `${total} / ${HABIT_TARGETS.exercise} min`
+      const el = document.getElementById('exercise-stats')
+      if (el) el.textContent = `${total} / ${HABIT_TARGETS.exercise} min`
       updateRings()
       overlay.remove()
     }
@@ -365,13 +545,14 @@ export async function renderHome(container, user) {
   }
 
   function updateRings() {
-    const state = useStore.getState()
-    const habits = state.habits
-    const timer = state.activeTimer
-
     const outerRing = document.getElementById('ring-outer')
     const midRing = document.getElementById('ring-mid')
     const innerRing = document.getElementById('ring-inner')
+    if (!outerRing) return
+
+    const state = useStore.getState()
+    const habits = state.habits
+    const timer = state.activeTimer
 
     const outerCirc = 515
     const midCirc = 427
@@ -404,9 +585,12 @@ export async function renderHome(container, user) {
     let tickInterval = null
     let selectedPreset = '16:8'
 
+    const startWrap = document.getElementById('timer-ring-start')
+    const activeWrap = document.getElementById('timer-ring-active')
+
     if (activeTimer) {
-      document.getElementById('timer-ring-start').classList.add('hidden')
-      document.getElementById('timer-ring-active').classList.remove('hidden')
+      if (startWrap) startWrap.classList.add('hidden')
+      if (activeWrap) activeWrap.classList.remove('hidden')
       startTick(activeTimer)
     }
 
@@ -417,7 +601,8 @@ export async function renderHome(container, user) {
         selectedPreset = btn.dataset.preset
       })
     })
-    document.querySelector('[data-preset="16:8"]').classList.add('active')
+    const defaultPreset = document.querySelector('[data-preset="16:8"]')
+    if (defaultPreset) defaultPreset.classList.add('active')
 
     document.getElementById('timer-start-btn').addEventListener('click', async () => {
       const targetMin = FASTING_PRESETS[selectedPreset] || parseInt(prompt('Target minutes:')) || 960
@@ -431,8 +616,8 @@ export async function renderHome(container, user) {
 
       if (!error && data) {
         useStore.getState().setActiveTimer(data)
-        document.getElementById('timer-ring-start').classList.add('hidden')
-        document.getElementById('timer-ring-active').classList.remove('hidden')
+        if (startWrap) startWrap.classList.add('hidden')
+        if (activeWrap) activeWrap.classList.remove('hidden')
         startTick(data)
       }
     })
@@ -443,18 +628,25 @@ export async function renderHome(container, user) {
         const elapsed = Math.floor((Date.now() - new Date(timer.started_at).getTime()) / 1000)
         const type = elapsed >= timer.target_minutes * 60 ? 'fasting_complete' : 'fasting'
         await supabase.from('active_timers').update({ active: false }).eq('id', timer.id)
-        await supabase.from('posts').insert({
-          user_id: user.id,
-          type,
-          content: type === 'fasting_complete' ? 'Completed a fast!' : 'Broke fast early',
-          duration_minutes: Math.floor(elapsed / 60),
-        })
+        if (type === 'fasting_complete') {
+          const presetLabel = timer.preset_type || `${timer.target_minutes}min`
+          await useStore.getState().dispatchMilestonePost('FAST_COMPLETE', 'Fasting', presetLabel)
+        } else {
+          await supabase.from('posts').insert({
+            user_id: user.id,
+            type,
+            content: 'Broke fast early',
+            duration_minutes: Math.floor(elapsed / 60),
+          })
+        }
         useStore.getState().setActiveTimer(null)
         if (tickInterval) clearInterval(tickInterval)
-        document.getElementById('timer-ring-start').classList.remove('hidden')
-        document.getElementById('timer-ring-active').classList.add('hidden')
-        document.getElementById('timer-display').textContent = '--:--:--'
-        document.getElementById('timer-phase-label').textContent = 'READY'
+        if (startWrap) startWrap.classList.remove('hidden')
+        if (activeWrap) activeWrap.classList.add('hidden')
+        const display = document.getElementById('timer-display')
+        if (display) display.textContent = '--:--:--'
+        const label = document.getElementById('timer-phase-label')
+        if (label) label.textContent = 'READY'
         updateRings()
       }
     })
@@ -471,13 +663,12 @@ export async function renderHome(container, user) {
         const h = Math.floor(remaining / 3600)
         const m = Math.floor((remaining % 3600) / 60)
         const s = remaining % 60
-        document.getElementById('timer-display').textContent =
-          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+        const display = document.getElementById('timer-display')
+        if (display) display.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 
-        if (remaining > 0) {
-          document.getElementById('timer-phase-label').textContent = 'FASTING WINDOW'
-        } else {
-          document.getElementById('timer-phase-label').textContent = '✅ EATING WINDOW'
+        const label = document.getElementById('timer-phase-label')
+        if (label) {
+          label.textContent = remaining > 0 ? 'FASTING WINDOW' : '✅ EATING WINDOW'
         }
         updateRings()
       }, 1000)
@@ -500,6 +691,50 @@ export async function renderHome(container, user) {
       }
     })
   }
+
+  function initPhotoCheckin() {
+    const btn = document.getElementById('photo-checkin-btn')
+    if (!btn) return
+    const input = document.getElementById('photo-input')
+    if (!input) return
+
+    btn.addEventListener('click', () => input.click())
+
+    input.addEventListener('change', async () => {
+      const file = input.value ? input.files[0] : null
+      if (!file) return
+      input.value = ''
+
+      const img = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const i = new Image()
+          i.onload = () => resolve(i)
+          i.onerror = reject
+          i.src = e.target.result
+        }
+        reader.readAsDataURL(file)
+      })
+
+      const canvas = document.createElement('canvas')
+      const maxW = 800
+      let { width, height } = img
+      if (width > maxW) { height *= maxW / width; width = maxW }
+      canvas.width = width; canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+
+      await supabase.from('posts').insert({
+        user_id: user.id,
+        type: 'checkin',
+        content: '📸 Photo check-in',
+        image_url: dataUrl,
+      })
+    })
+  }
+
+  initPhotoCheckin()
 
   return () => {
     document.querySelectorAll('.bottom-nav a').forEach(a => {

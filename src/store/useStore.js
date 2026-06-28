@@ -3,6 +3,19 @@ import { supabase } from '../lib/supabase.js'
 
 const today = () => new Date().toISOString().split('T')[0]
 
+const DEFAULT_GRID = ['fasting', 'no_sugar', 'exercise', 'no_smoking']
+
+function loadGridLayout() {
+  try {
+    const saved = localStorage.getItem('ff_grid_layout')
+    return saved ? JSON.parse(saved) : DEFAULT_GRID
+  } catch { return DEFAULT_GRID }
+}
+
+function saveGridLayout(layout) {
+  try { localStorage.setItem('ff_grid_layout', JSON.stringify(layout)) } catch {}
+}
+
 export const useStore = createStore((set, get) => ({
   user: null,
   profile: null,
@@ -12,6 +25,26 @@ export const useStore = createStore((set, get) => ({
   feed: [],
   friends: [],
   loading: false,
+  gridLayout: loadGridLayout(),
+  isEditingGrid: false,
+
+  setEditingGrid: (editing) => set({ isEditingGrid: editing }),
+
+  mountHabit: (habitId) => {
+    const { gridLayout } = get()
+    if (gridLayout.includes(habitId)) return
+    const updated = [...gridLayout, habitId]
+    set({ gridLayout: updated })
+    saveGridLayout(updated)
+  },
+
+  unmountHabit: (habitId) => {
+    const { gridLayout } = get()
+    if (habitId === 'fasting') return
+    const updated = gridLayout.filter(id => id !== habitId)
+    set({ gridLayout: updated })
+    saveGridLayout(updated)
+  },
 
   setUser: (user) => set({ user }),
 
@@ -46,6 +79,7 @@ export const useStore = createStore((set, get) => ({
   toggleHabit: async (habit) => {
     const { user, habits } = get()
     if (!user) return
+    const wasOff = !habits[habit]
     const updated = { ...habits, [habit]: !habits[habit] }
     set({ habits: updated })
 
@@ -59,6 +93,23 @@ export const useStore = createStore((set, get) => ({
       upsertData.exercise_minutes = habits.exercise_minutes || 0
     }
     await supabase.from('habits').upsert(upsertData, { onConflict: 'user_id,date' })
+
+    if (wasOff && updated[habit]) {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yStr = yesterday.toISOString().split('T')[0]
+      const { data: yData } = await supabase
+        .from('habits')
+        .select(habit)
+        .eq('user_id', user.id)
+        .eq('date', yStr)
+        .maybeSingle()
+
+      const habitLabels = { exercise: 'Exercise', no_sugar: 'No Sugar', no_smoking: 'No Smoking' }
+      if (!yData || !yData[habit]) {
+        get().dispatchMilestonePost('STREAK_START', habitLabels[habit] || habit)
+      }
+    }
   },
 
   fetchHabitHistory: async (userId, limitDays = 90) => {
@@ -209,5 +260,23 @@ export const useStore = createStore((set, get) => ({
       else break
     }
     return streak
+  },
+
+  dispatchMilestonePost: async (eventType, habitLabel, metaValue) => {
+    const { user, profile } = get()
+    if (!user) return
+    const userName = profile?.display_name || profile?.username || 'Someone'
+    const templates = {
+      STREAK_START: `${userName} started their ${habitLabel} journey today! Send some fuel to crush Day 1. 🚭`,
+      PHASE_UNLOCK: `${userName} unlocked Phase ${metaValue}: The Gut & Skin Glow on their ${habitLabel} Journey! 🌟`,
+      FAST_COMPLETE: `${userName} successfully locked down a strict ${metaValue} Fasting window! 🙌`,
+    }
+    const content = templates[eventType]
+    if (!content) return
+    await supabase.from('posts').insert({
+      user_id: user.id,
+      type: eventType === 'FAST_COMPLETE' ? 'fasting_complete' : 'general',
+      content,
+    })
   },
 }))

@@ -45,5 +45,8 @@ ALTER TABLE active_timers ADD COLUMN IF NOT EXISTS preset_type TEXT CHECK (prese
 ALTER TABLE habits ADD COLUMN IF NOT EXISTS exercise_minutes INTEGER DEFAULT 0;
 ALTER TABLE habits ADD COLUMN IF NOT EXISTS exercise_updated_at TIMESTAMPTZ;
 
+-- Add image_url column for photo check-in posts
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS image_url TEXT;
+
 -- Enable realtime for habits
 ALTER PUBLICATION supabase_realtime ADD TABLE habits;

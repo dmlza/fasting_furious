@@ -15,15 +15,26 @@ let navEl = null
 
 const app = document.getElementById('app')
 
-const routes = {
-  '/': renderHome,
-  '/feed': renderFeed,
-  '/profile': renderProfile,
-}
+import { renderPublicProfile } from './screens/Profile.js'
+
+const routes = [
+  { pattern: '/', handler: renderHome },
+  { pattern: '/feed', handler: renderFeed },
+  { pattern: '/profile', handler: renderProfile },
+  { pattern: /^\/profile\/(.+)$/, handler: (container, user, opts) => {
+    const profileUserId = opts.params[1]
+    return renderPublicProfile(container, user, profileUserId, opts)
+  }},
+]
 
 function getRoute(path) {
-  for (const [pattern, handler] of Object.entries(routes)) {
-    if (pattern === path) return { handler, params: {} }
+  for (const entry of routes) {
+    if (typeof entry.pattern === 'string') {
+      if (entry.pattern === path) return { handler: entry.handler, params: {} }
+    } else {
+      const m = path.match(entry.pattern)
+      if (m) return { handler: entry.handler, params: m }
+    }
   }
   return { handler: renderHome, params: {} }
 }
@@ -83,7 +94,16 @@ window.addEventListener('hashchange', () => {
   navigate(window.location.hash.slice(1) || '/')
 })
 
+function initTheme() {
+  try {
+    const saved = localStorage.getItem('ff_theme')
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
+    else if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light')
+  } catch {}
+}
+
 async function init() {
+  initTheme()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (session?.user) {

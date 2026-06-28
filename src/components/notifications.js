@@ -15,8 +15,13 @@ export class NotificationManager {
   }
 
   createBell() {
-    const bellContainer = document.getElementById('notif-bell-container')
-    if (!bellContainer) return
+    let bellContainer = document.getElementById('notif-bell-container')
+    if (!bellContainer) {
+      bellContainer = document.createElement('div')
+      bellContainer.id = 'notif-bell-container'
+      bellContainer.style.cssText = 'position:fixed;top:12px;right:16px;z-index:200'
+      document.body.appendChild(bellContainer)
+    }
 
     bellContainer.innerHTML = `
       <div class="notif-bell" id="notif-bell">
