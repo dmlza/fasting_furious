@@ -5,6 +5,7 @@ import { renderNav } from './components/Navigation.js'
 import { renderHome } from './screens/Home.js'
 import { renderFeed } from './screens/Feed.js'
 import { renderProfile } from './screens/Profile.js'
+import { renderFriends } from './pages/friends.js'
 import { NotificationManager } from './components/notifications.js'
 import { useStore } from './store/useStore.js'
 
@@ -21,6 +22,7 @@ const routes = [
   { pattern: '/', handler: renderHome },
   { pattern: '/feed', handler: renderFeed },
   { pattern: '/profile', handler: renderProfile },
+  { pattern: '/friends', handler: renderFriends },
   { pattern: /^\/profile\/(.+)$/, handler: (container, user, opts) => {
     const profileUserId = opts.params[1]
     return renderPublicProfile(container, user, profileUserId, opts)
@@ -70,6 +72,7 @@ async function navigate(path) {
 
   const cleanup = await handler(app, currentUser, { navigate, params })
   currentCleanup = cleanup
+  updateBottomNavActive(hashPath)
 }
 
 function setNavVisible(visible) {

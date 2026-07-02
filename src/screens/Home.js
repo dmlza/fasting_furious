@@ -727,7 +727,7 @@ export async function renderHome(container, user) {
 
       await supabase.from('posts').insert({
         user_id: user.id,
-        type: 'checkin',
+        type: 'general',
         content: '📸 Photo check-in',
         image_url: dataUrl,
       })
