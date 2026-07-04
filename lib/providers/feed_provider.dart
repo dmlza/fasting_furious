@@ -40,11 +40,21 @@ class FeedNotifier extends StateNotifier<FeedState> {
       // Fetch all posts (simple approach — no friendships dependency)
       final postsData = await service.client
           .from('posts')
-          .select('*, profile:user_id(username, display_name)')
+          .select('*')
           .order('created_at', ascending: false)
           .limit(50);
 
-      final postIds = (postsData as List).map((p) => p['id'] as String).toList();
+      // Fetch all profiles for the posts
+      final userIds = (postsData as List).map((p) => p['user_id'] as String).toSet().toList();
+      final profilesData = userIds.isNotEmpty
+          ? await service.client.from('profiles').select('id, username, display_name').inFilter('id', userIds)
+          : [];
+      final profilesMap = <String, Map<String, dynamic>>{};
+      for (final p in profilesData as List) {
+        profilesMap[p['id'] as String] = p as Map<String, dynamic>;
+      }
+
+      final postIds = postsData.map((p) => p['id'] as String).toList();
 
       List<Map<String, dynamic>> reactions = [];
       if (postIds.isNotEmpty) {
@@ -57,9 +67,9 @@ class FeedNotifier extends StateNotifier<FeedState> {
         reactionsByPost.putIfAbsent(reaction.postId, () => []).add(reaction);
       }
 
-      final posts = (postsData).map((p) {
+      final posts = postsData.map((p) {
         final postReactions = reactionsByPost[p['id']] ?? [];
-        final profileData = p['profile'] as Map<String, dynamic>?;
+        final profileData = profilesMap[p['user_id']];
         return Post.fromMap(p, profileData: profileData).copyWith(
           reactions: postReactions,
           hypeCount: postReactions.where((r) => r.emoji == '\u{1F525}').length,

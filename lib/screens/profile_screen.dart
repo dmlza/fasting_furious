@@ -49,18 +49,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       final data = await ref.read(supabaseServiceProvider).client
           .from('posts')
-          .select('*, profile:user_id(username, display_name)')
+          .select('*')
           .eq('user_id', userId)
           .order('created_at', ascending: false)
-          .limit(20);
+          .limit(50);
+      final profileData = ref.read(profileProvider);
       final posts = (data as List).map((p) {
-        final profileData = p['profile'] as Map<String, dynamic>?;
-        return Post.fromMap(p, profileData: profileData);
+        return Post.fromMap(p, profileData: profileData != null ? {
+          'id': profileData.id,
+          'username': profileData.username,
+          'display_name': profileData.displayName,
+        } : null);
       }).toList();
       if (mounted) setState(() { _myPosts = posts; _loadingPosts = false; });
       return posts;
     } catch (e) {
-      if (mounted) setState(() => _loadingPosts = false);
+      if (mounted) setState(() { _loadingPosts = false; });
       return [];
     }
   }
