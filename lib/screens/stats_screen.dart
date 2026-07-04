@@ -52,9 +52,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildSummaryRow(dynamic state) {
-    final completedFasts = state.habitHistory.length;
+    final completedFasts = state.history.length;
     final avgHours = completedFasts > 0
-        ? (state.habitHistory.fold<int>(0, (sum, h) => sum + (h['duration_minutes'] ?? 0)) / completedFasts / 60).toStringAsFixed(1)
+        ? (state.history.fold<int>(0, (sum, h) => sum + h.exerciseMinutes) / completedFasts / 60).toStringAsFixed(1)
         : '0';
     final bestStreak = _getBestStreak(state);
 
@@ -251,8 +251,8 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     for (int i = days - 1; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       final dateStr = date.toIso8601String().split('T')[0];
-      final history = state.habitHistory.where((h) => h['date'] == dateStr).toList();
-      final hours = history.isNotEmpty ? (history.first['duration_minutes'] ?? 0) / 60.0 : 0.0;
+      final history = state.history.where((h) => h.date == dateStr).toList();
+      final hours = history.isNotEmpty ? history.first.exerciseMinutes / 60.0 : 0.0;
       spots.add(FlSpot((days - 1 - i).toDouble(), hours));
     }
 
