@@ -36,41 +36,40 @@ class FeedNotifier extends StateNotifier<FeedState> {
     state = state.copyWith(loading: true);
     final service = ref.read(supabaseServiceProvider);
 
-    final friendships = await service.client
-        .from('friendships')
-        .select('sender_id, receiver_id')
-        .or('sender_id.eq.$userId,receiver_id.eq.$userId')
-        .eq('status', 'accepted');
+    try {
+      // Fetch all posts (simple approach — no friendships dependency)
+      final postsData = await service.client
+          .from('posts')
+          .select('*, profile:user_id(username, display_name)')
+          .order('created_at', ascending: false)
+          .limit(50);
 
-    final friendIds = (friendships as List).map((f) =>
-      f['sender_id'] == userId ? f['receiver_id'] as String : f['sender_id'] as String
-    ).toList();
-    friendIds.add(userId);
+      final postIds = (postsData as List).map((p) => p['id'] as String).toList();
 
-    final postsData = await service.fetchFeed(friendIds);
-    final postIds = postsData.map((p) => p['id'] as String).toList();
+      List<Map<String, dynamic>> reactions = [];
+      if (postIds.isNotEmpty) {
+        reactions = await service.fetchReactions(postIds);
+      }
 
-    List<Map<String, dynamic>> reactions = [];
-    if (postIds.isNotEmpty) {
-      reactions = await service.fetchReactions(postIds);
+      final reactionsByPost = <String, List<Reaction>>{};
+      for (final r in reactions) {
+        final reaction = Reaction.fromMap(r);
+        reactionsByPost.putIfAbsent(reaction.postId, () => []).add(reaction);
+      }
+
+      final posts = (postsData).map((p) {
+        final postReactions = reactionsByPost[p['id']] ?? [];
+        final profileData = p['profile'] as Map<String, dynamic>?;
+        return Post.fromMap(p, profileData: profileData).copyWith(
+          reactions: postReactions,
+          hypeCount: postReactions.where((r) => r.emoji == '\u{1F525}').length,
+        );
+      }).toList();
+
+      state = FeedState(posts: posts, loading: false);
+    } catch (e) {
+      state = FeedState(posts: [], loading: false);
     }
-
-    final reactionsByPost = <String, List<Reaction>>{};
-    for (final r in reactions) {
-      final reaction = Reaction.fromMap(r);
-      reactionsByPost.putIfAbsent(reaction.postId, () => []).add(reaction);
-    }
-
-    final posts = postsData.map((p) {
-      final postReactions = reactionsByPost[p['id']] ?? [];
-      final profileData = p['profile'] as Map<String, dynamic>?;
-      return Post.fromMap(p, profileData: profileData).copyWith(
-        reactions: postReactions,
-        hypeCount: postReactions.where((r) => r.emoji == '\u{1F525}').length,
-      );
-    }).toList();
-
-    state = FeedState(posts: posts, loading: false);
   }
 
   Future<void> toggleReaction(String userId, String postId, String emoji) async {

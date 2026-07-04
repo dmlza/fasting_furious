@@ -127,7 +127,7 @@ class SupabaseService {
       'user_id': userId,
       'type': type,
       'content': content,
-      'image_url': imageUrl,
+      if (imageUrl != null) 'image_url': imageUrl,
       'duration_minutes': durationMinutes,
     });
   }

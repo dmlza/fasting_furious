@@ -5,6 +5,7 @@ import 'config/theme.dart';
 import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/habit_provider.dart';
+import 'providers/feed_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/landing_screen.dart';
 import 'screens/auth_screen.dart';
@@ -143,6 +144,14 @@ class _MainShellState extends ConsumerState<MainShell> {
             _showCreatePostSheet();
           } else {
             setState(() => _currentIndex = i);
+            if (i == 3) {
+              final user = ref.read(currentUserProvider);
+              if (user != null) ref.read(feedProvider.notifier).fetchFeed(user.id);
+            }
+            if (i == 4) {
+              final user = ref.read(currentUserProvider);
+              if (user != null) ref.read(profileProvider.notifier).fetchProfile(user.id);
+            }
           }
         },
         height: 70,
@@ -225,8 +234,8 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final user = ref.read(currentUserProvider);
-    final habitState = ref.read(habitProvider);
+    final user = ref.watch(currentUserProvider);
+    final habitState = ref.watch(habitProvider);
     final habits = habitState.habits;
     final smokingStreak = habitState.getStreak('no_smoking');
     final sugarStreak = habitState.getStreak('no_sugar');
@@ -322,30 +331,54 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
-                onPressed: _loading || user == null
-                    ? null
-                    : () async {
-                        final content = _buildContent();
-                        if (content.isEmpty) return;
-                        setState(() => _loading = true);
-                        await ref.read(supabaseServiceProvider).createPost(
-                          user.id,
-                          type: _selectedType,
-                          content: content,
-                        );
-                        if (mounted) {
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Posted!')),
-                          );
-                        }
-                      },
+                  onPressed: user == null
+                      ? null
+                      : _loading
+                          ? null
+                          : () async {
+                              final content = _buildContent();
+                              if (content.trim().isEmpty) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Select a stat or type a message first')),
+                                  );
+                                }
+                                return;
+                              }
+                              setState(() => _loading = true);
+                              try {
+                                await ref.read(supabaseServiceProvider).createPost(
+                                  user.id,
+                                  type: _selectedType,
+                                  content: content.trim(),
+                                );
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Posted!')),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  setState(() => _loading = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Failed to post: $e')),
+                                  );
+                                }
+                              }
+                            },
                 child: _loading
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Post'),
+                    : const Text('Post', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
+            if (user == null)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text('Not logged in', style: TextStyle(color: Colors.red, fontSize: 12)),
+              ),
           ],
         ),
       ),

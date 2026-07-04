@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/theme.dart';
+import '../models/models.dart';
 import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/friends_provider.dart';
 import 'stats_screen.dart';
 import 'workout_history_screen.dart';
+import 'activity_detail_screen.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _usernameController = TextEditingController();
   final _bioController = TextEditingController();
   int _postCount = 0;
+  List<Post> _myPosts = [];
+  bool _loadingPosts = true;
 
   @override
   void initState() {
@@ -34,8 +38,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (user == null) return;
     await ref.read(friendsProvider.notifier).fetchAll(user.id);
     await ref.read(habitProvider.notifier).fetchAll(user.id);
-    final count = await ref.read(supabaseServiceProvider).getPostCount(user.id);
-    if (mounted) setState(() => _postCount = count);
+    final results = await Future.wait([
+      ref.read(supabaseServiceProvider).getPostCount(user.id),
+      _fetchMyPosts(user.id),
+    ]);
+    if (mounted) setState(() => _postCount = results[0] as int);
+  }
+
+  Future<List<Post>> _fetchMyPosts(String userId) async {
+    try {
+      final data = await ref.read(supabaseServiceProvider).client
+          .from('posts')
+          .select('*, profile:user_id(username, display_name)')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(20);
+      final posts = (data as List).map((p) {
+        final profileData = p['profile'] as Map<String, dynamic>?;
+        return Post.fromMap(p, profileData: profileData);
+      }).toList();
+      if (mounted) setState(() { _myPosts = posts; _loadingPosts = false; });
+      return posts;
+    } catch (e) {
+      if (mounted) setState(() => _loadingPosts = false);
+      return [];
+    }
   }
 
   @override
@@ -51,6 +78,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profile = ref.watch(profileProvider);
     final friends = ref.watch(friendsProvider);
     final themeMode = ref.watch(themeProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -308,6 +336,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             );
           }),
+
+        // My Posts
+        const SizedBox(height: 24),
+        Text(
+          'My Posts ($_postCount)',
+          style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color, letterSpacing: 1),
+        ),
+        const SizedBox(height: 12),
+        if (_loadingPosts)
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_myPosts.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text('No posts yet', style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+          )
+        else
+          ..._myPosts.map((post) => _buildPostCard(post, theme)),
       ],
       ),
     );
@@ -320,6 +368,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (s > max) max = s;
     }
     return max;
+  }
+
+  Widget _buildPostCard(Post post, ThemeData theme) {
+    final typeEmoji = {
+      'fasting': '\u{1F37D}\u{FE0F}',
+      'fasting_complete': '\u2705',
+      'exercise': '\u{1F3C3}',
+      'workout_complete': '\u{1F3C6}',
+      'general': '\u{1F4AC}',
+    };
+    final emoji = typeEmoji[post.type] ?? '\u{1F4AC}';
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => ActivityDetailScreen(post: post)),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Text(
+                  post.timeAgo,
+                  style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+                ),
+                const Spacer(),
+                if (post.hypeCount > 0)
+                  Text('\u{1F525} ${post.hypeCount}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            if (post.content != null && post.content!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                post.content!,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
+              ),
+            ],
+            if (post.durationMinutes != null && post.durationMinutes! > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${post.durationFormatted} duration',
+                style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }
 
