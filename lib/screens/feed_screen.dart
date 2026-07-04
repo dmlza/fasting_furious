@@ -6,6 +6,8 @@ import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
 import '../models/models.dart';
 import 'activity_detail_screen.dart';
+import 'public_profile_screen.dart';
+import '../config/page_transitions.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
 
@@ -143,9 +145,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ActivityDetailScreen(post: post)),
-        );
+        Navigator.of(context).push(SlideUpRoute(page: ActivityDetailScreen(post: post)));
       },
       child: Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -156,26 +156,37 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: _avatarColor(name),
-                  child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                      Text('${config.emoji} ${config.label}',
-                        style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
-                    ],
+            GestureDetector(
+              onTap: post.userId != user?.id ? () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => PublicProfileScreen(
+                    userId: post.userId,
+                    username: post.profile?.username,
+                    displayName: post.profile?.displayName,
+                  )),
+                );
+              } : null,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: _avatarColor(name),
+                    child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
                   ),
-                ),
-                Text(post.timeAgo, style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
-              ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text('${config.emoji} ${config.label}',
+                          style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
+                      ],
+                    ),
+                  ),
+                  Text(post.timeAgo, style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             // Stat badges

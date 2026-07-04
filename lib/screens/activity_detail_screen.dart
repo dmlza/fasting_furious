@@ -4,6 +4,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
 import '../models/models.dart';
+import 'public_profile_screen.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
 
@@ -92,25 +93,36 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Activity header
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: _avatarColor(name),
-                        child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                            Text('${config.emoji} ${config.label} \u00B7 ${post.timeAgo}',
-                              style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
-                          ],
+                  GestureDetector(
+                    onTap: post.userId != ref.read(currentUserProvider)?.id ? () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => PublicProfileScreen(
+                          userId: post.userId,
+                          username: post.profile?.username,
+                          displayName: post.profile?.displayName,
+                        )),
+                      );
+                    } : null,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: _avatarColor(name),
+                          child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                              Text('${config.emoji} ${config.label} \u00B7 ${post.timeAgo}',
+                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 

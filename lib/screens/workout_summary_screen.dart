@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/theme.dart';
 import '../models/exercise.dart';
 import '../providers/auth_provider.dart';
+import '../providers/habit_provider.dart';
 
 class WorkoutSummaryScreen extends ConsumerStatefulWidget {
   final int targetMinutes;
@@ -100,6 +101,11 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
             .map((e) => '${e.key.label}: ${e.value}')
             .join(', '),
       );
+
+      final minutes = widget.elapsedSeconds ~/ 60;
+      if (minutes > 0) {
+        await ref.read(habitProvider.notifier).logExerciseMinutes(user.id, minutes);
+      }
 
       if (mounted) {
         setState(() {

@@ -9,6 +9,7 @@ import '../providers/friends_provider.dart';
 import 'stats_screen.dart';
 import 'workout_history_screen.dart';
 import 'activity_detail_screen.dart';
+import '../config/page_transitions.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -187,9 +188,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Card(
           child: InkWell(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const StatsScreen()),
-              );
+              Navigator.of(context).push(FadeRoute(page: const StatsScreen()));
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -229,9 +228,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Card(
           child: InkWell(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const WorkoutHistoryScreen()),
-              );
+              Navigator.of(context).push(FadeRoute(page: const WorkoutHistoryScreen()));
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
@@ -385,10 +382,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final emoji = typeEmoji[post.type] ?? '\u{1F4AC}';
 
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ActivityDetailScreen(post: post)),
-        );
+        onTap: () {
+        Navigator.of(context).push(FadeRoute(page: ActivityDetailScreen(post: post)));
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
