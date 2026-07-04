@@ -49,10 +49,10 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildSummaryRow(dynamic state) {
+  Widget _buildSummaryRow(HabitState state) {
     final completedFasts = state.history.length;
     final avgHours = completedFasts > 0
-        ? (state.history.fold<int>(0, (sum, h) => sum + h.exerciseMinutes) / completedFasts / 60).toStringAsFixed(1)
+        ? (state.history.fold(0, (sum, h) => sum + h.exerciseMinutes) / completedFasts / 60).toStringAsFixed(1)
         : '0';
     final bestStreak = _getBestStreak(state);
 
@@ -82,7 +82,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildChartSection(dynamic state) {
+  Widget _buildChartSection(HabitState state) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -151,7 +151,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  Widget _buildChart(dynamic state) {
+  Widget _buildChart(HabitState state) {
     final data = _getChartData(state);
     final maxY = data.fold<double>(0, (max, bar) => bar.y > max ? bar.y : max);
 
@@ -239,7 +239,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  List<FlSpot> _getChartData(dynamic state) {
+  List<FlSpot> _getChartData(HabitState state) {
     final days = _selectedRange == '7D' ? 7 : _selectedRange == '14D' ? 14 : 30;
     final now = DateTime.now();
     final spots = <FlSpot>[];
@@ -255,7 +255,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     return spots;
   }
 
-  Widget _buildStreaksSection(dynamic state) {
+  Widget _buildStreaksSection(HabitState state) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -290,7 +290,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     );
   }
 
-  int _getBestStreak(dynamic state) {
+  int _getBestStreak(HabitState state) {
     int max = 0;
     for (final h in ['exercise', 'no_sugar', 'no_smoking']) {
       final s = state.getStreak(h);
