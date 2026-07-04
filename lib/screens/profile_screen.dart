@@ -421,6 +421,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, height: 1.4),
               ),
             ],
+            if (post.imageUrl != null) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  post.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: theme.dividerColor.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(child: Icon(Icons.broken_image, color: theme.textTheme.bodySmall?.color)),
+                  ),
+                ),
+              ),
+            ],
             if (post.durationMinutes != null && post.durationMinutes! > 0) ...[
               const SizedBox(height: 6),
               Text(

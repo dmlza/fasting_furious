@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/theme.dart';
@@ -213,11 +215,55 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
   bool _shareSmoking = false;
   bool _shareSugar = false;
   bool _shareExercise = false;
+  File? _selectedImage;
+  bool _uploadingImage = false;
+
+  final _picker = ImagePicker();
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(source: source, maxWidth: 1080, imageQuality: 80);
+      if (picked != null) {
+        setState(() => _selectedImage = File(picked.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadImage(String userId) async {
+    if (_selectedImage == null) return null;
+    setState(() => _uploadingImage = true);
+    try {
+      final ext = _selectedImage!.path.split('.').last;
+      final path = '$userId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+      await ref.read(supabaseServiceProvider).client.storage
+          .from('post-images')
+          .upload(path, _selectedImage!);
+      final url = ref.read(supabaseServiceProvider).client.storage
+          .from('post-images')
+          .getPublicUrl(path);
+      return url;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload image: $e')),
+        );
+      }
+      return null;
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
   }
 
   String _buildContent() {
@@ -328,6 +374,52 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
               maxLines: 3,
               decoration: const InputDecoration(hintText: "Add a message (optional)"),
             ),
+            const SizedBox(height: 12),
+
+            // Image preview + picker
+            if (_selectedImage != null)
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(_selectedImage!, height: 160, width: double.infinity, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    top: 8, right: 8,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedImage = null),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
+                        child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      ),
+                    ),
+                  ),
+                  if (_uploadingImage)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(12)),
+                        child: const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                      ),
+                    ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  _ImagePickerButton(
+                    icon: Icons.photo_library_outlined,
+                    label: 'Gallery',
+                    onTap: () => _pickImage(ImageSource.gallery),
+                  ),
+                  const SizedBox(width: 10),
+                  _ImagePickerButton(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Camera',
+                    onTap: () => _pickImage(ImageSource.camera),
+                  ),
+                ],
+              ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -347,13 +439,18 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                                 }
                                 return;
                               }
-                              setState(() => _loading = true);
-                              try {
-                                await ref.read(supabaseServiceProvider).createPost(
-                                  user.id,
-                                  type: _selectedType,
-                                  content: content.trim(),
-                                );
+                      setState(() => _loading = true);
+                      try {
+                        String? imageUrl;
+                        if (_selectedImage != null) {
+                          imageUrl = await _uploadImage(user.id);
+                        }
+                        await ref.read(supabaseServiceProvider).createPost(
+                          user.id,
+                          type: _selectedType,
+                          content: content.trim(),
+                          imageUrl: imageUrl,
+                        );
                                 if (mounted) {
                                   Navigator.of(context).pop();
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -464,6 +561,40 @@ class _TypeChip extends StatelessWidget {
           ),
         ),
         child: Text('$emoji $label', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? AppColors.indigo : null)),
+      ),
+    );
+  }
+}
+
+class _ImagePickerButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ImagePickerButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).textTheme.bodySmall?.color)),
+          ],
+        ),
       ),
     );
   }
