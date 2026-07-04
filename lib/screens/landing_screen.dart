@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 
 class LandingScreen extends StatelessWidget {
   final VoidCallback onGetStarted;
@@ -6,173 +7,117 @@ class LandingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      body: SingleChildScrollView(
+      body: SafeArea(
         child: Column(
           children: [
-            // Hero
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.topCenter,
-                  radius: 1.5,
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-                    Colors.transparent,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 40),
+                    // Logo
+                    Text(
+                      'Fasting Furious',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: theme.colorScheme.primary,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'train hard. fast harder.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: theme.textTheme.bodySmall?.color,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Phone mockup
+                    _PhoneMockup(isDark: isDark),
+
+                    const SizedBox(height: 40),
+
+                    // Feature bullets
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Column(
+                        children: [
+                          _FeatureRow(
+                            icon: Icons.timer_outlined,
+                            text: 'Track fasting & workouts',
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _FeatureRow(
+                            icon: Icons.people_outline,
+                            text: 'Challenge your friends',
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: 16),
+                          _FeatureRow(
+                            icon: Icons.local_fire_department_outlined,
+                            text: 'Build streaks & earn ranks',
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '\u{1F525} Fasting Furious',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'TRAIN HARD. FAST HARDER.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Track your fasts, workouts, and daily progress with friends.\nTurn your health journey into a game.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                      height: 1.7,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: onGetStarted,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        ),
-                        child: const Text('Get Started Free', style: TextStyle(fontSize: 16)),
-                      ),
-                      const SizedBox(width: 12),
-                      OutlinedButton(
-                        onPressed: onGetStarted,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                        ),
-                        child: const Text('Sign In', style: TextStyle(fontSize: 16)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ),
 
-            // Features
+            // Bottom CTA
             Padding(
-              padding: const EdgeInsets.all(40),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  Text(
-                    'Your fitness, RPG-style',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  _FeatureCard(
-                    icon: '\u23F1\uFE0F',
-                    title: 'Smart Timers',
-                    description: 'Track fasting and workout sessions with live countdown timers. Get notified when you complete your goals.',
-                  ),
-                  const SizedBox(height: 24),
-                  _FeatureCard(
-                    icon: '\u{1F465}',
-                    title: 'Friend Cards',
-                    description: 'See your friends\' daily activity as Pokemon-style trading cards. Give kudos and stay motivated together.',
-                  ),
-                  const SizedBox(height: 24),
-                  _FeatureCard(
-                    icon: '\u{1F3C6}',
-                    title: 'Streaks & Ranks',
-                    description: 'Earn titles and rare card borders based on your activity. The more you show up, the more you unlock.',
-                  ),
-                ],
-              ),
-            ),
-
-            // CTA
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(60),
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.bottomCenter,
-                  radius: 1.5,
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'Ready to level up?',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: onGetStarted,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.indigo,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Create Account',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Join your friends. Track your progress. Get stronger every day.',
-                    style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: onGetStarted,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: onGetStarted,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.indigo,
+                        side: const BorderSide(color: AppColors.indigo),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
                     ),
-                    child: const Text('Get Started Now', style: TextStyle(fontSize: 16)),
                   ),
                 ],
-              ),
-            ),
-
-            // Footer
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: Theme.of(context).dividerColor),
-                ),
-              ),
-              child: Text(
-                'Fasting Furious \u2014 train hard. fast harder.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
               ),
             ),
           ],
@@ -182,39 +127,176 @@ class LandingScreen extends StatelessWidget {
   }
 }
 
-class _FeatureCard extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String description;
-
-  const _FeatureCard({required this.icon, required this.title, required this.description});
+class _PhoneMockup extends StatelessWidget {
+  final bool isDark;
+  const _PhoneMockup({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+    return Container(
+      width: 220,
+      height: 400,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
         child: Column(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 40)),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+            // Status bar
+            Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('9:41', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black)),
+                  Row(
+                    children: [
+                      Icon(Icons.signal_cellular_4_bar, size: 14, color: isDark ? Colors.white : Colors.black),
+                      const SizedBox(width: 4),
+                      Icon(Icons.wifi, size: 14, color: isDark ? Colors.white : Colors.black),
+                      const SizedBox(width: 4),
+                      Icon(Icons.battery_full, size: 14, color: isDark ? Colors.white : Colors.black),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).textTheme.bodySmall?.color,
-                height: 1.6,
+
+            // App bar mock
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Fasting Furious', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black)),
+                  Icon(Icons.notifications_outlined, color: isDark ? Colors.white : Colors.black),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Timer card mock
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.indigo.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Text('16:8', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.indigo)),
+                    const SizedBox(height: 4),
+                    Text('FASTING', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.indigo, letterSpacing: 2)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Activity rings mock
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _MockRing(color: AppColors.indigo, size: 50),
+                const SizedBox(width: 8),
+                _MockRing(color: AppColors.emerald, size: 40),
+                const SizedBox(width: 8),
+                _MockRing(color: AppColors.amber, size: 30),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Feed preview mock
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  CircleAvatar(radius: 12, backgroundColor: AppColors.coral),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Alex completed a fast', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black)),
+                        Text('2 hours ago', style: TextStyle(fontSize: 9, color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5))),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MockRing extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _MockRing({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 3),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: CircularProgressIndicator(
+          value: 0.7,
+          strokeWidth: 3,
+          backgroundColor: color.withValues(alpha: 0.2),
+          valueColor: AlwaysStoppedAnimation(color),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final bool isDark;
+  const _FeatureRow({required this.icon, required this.text, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.indigo.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppColors.indigo, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Text(text, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black)),
+      ],
     );
   }
 }

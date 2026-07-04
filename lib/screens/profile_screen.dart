@@ -50,7 +50,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final friends = ref.watch(friendsProvider);
     final themeMode = ref.watch(themeProvider);
 
-    return ListView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Profile',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+        ),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      body: ListView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
       children: [
         // Profile Header
@@ -213,6 +223,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             );
           }),
       ],
+      ),
     );
   }
 

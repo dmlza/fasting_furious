@@ -32,23 +32,34 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final feedState = ref.watch(feedProvider);
     final user = ref.read(currentUserProvider);
 
-    return feedState.loading && feedState.posts.isEmpty
-        ? const Center(child: CircularProgressIndicator())
-        : feedState.posts.isEmpty
-            ? const Center(child: Text('No updates yet. Add friends to see their progress!'))
-            : RefreshIndicator(
-                onRefresh: _fetch,
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                  children: [
-                    // Stories bar
-                    _buildStoriesBar(feedState, user),
-                    const SizedBox(height: 8),
-                    // Feed posts
-                    ...feedState.posts.map((post) => _buildPostCard(post, user)),
-                  ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Activity',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+        ),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      body: feedState.loading && feedState.posts.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : feedState.posts.isEmpty
+              ? const Center(child: Text('No updates yet. Add friends to see their progress!'))
+              : RefreshIndicator(
+                  onRefresh: _fetch,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    children: [
+                      // Stories bar
+                      _buildStoriesBar(feedState, user),
+                      const SizedBox(height: 8),
+                      // Feed posts
+                      ...feedState.posts.map((post) => _buildPostCard(post, user)),
+                    ],
+                  ),
                 ),
-              );
+    );
   }
 
   Widget _buildStoriesBar(FeedState state, User? user) {

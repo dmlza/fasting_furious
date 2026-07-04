@@ -56,63 +56,81 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   Widget build(BuildContext context) {
     final friendsState = ref.watch(friendsProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Friends', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 16),
-
-          // Search
-          TextField(
-            onChanged: _onSearch,
-            decoration: const InputDecoration(hintText: 'Search users by username...'),
-          ),
-          if (_searchResults.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Card(
-              child: Column(
-                children: _searchResults.map((r) {
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-                      child: Text(r.initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w600)),
-                    ),
-                    title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                    subtitle: Text(
-                      '@${r.username ?? 'unknown'}',
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
-                    ),
-                    onTap: () {},
-                  );
-                }).toList(),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Friends',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+        ),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              onChanged: _onSearch,
+              decoration: const InputDecoration(hintText: 'Search users by username...'),
+            ),
+            if (_searchResults.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Card(
+                child: Column(
+                  children: _searchResults.map((r) {
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
+                        child: Text(r.initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w600)),
+                      ),
+                      title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      subtitle: Text(
+                        '@${r.username ?? 'unknown'}',
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.person_add_outlined, color: AppColors.indigo, size: 20),
+                        onPressed: () async {
+                          final user = ref.read(currentUserProvider);
+                          if (user == null) return;
+                          await ref.read(supabaseServiceProvider).sendFriendRequest(user.id, r.id);
+                          await ref.read(supabaseServiceProvider).sendNotification(
+                            r.id, user.id, 'friend_request', '${user.email} sent you a friend request',
+                          );
+                          setState(() => _searchResults = []);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Friend request sent!')),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _TabButton(label: 'Friends', isActive: _currentTab == 'friends', onTap: () => setState(() => _currentTab = 'friends')),
+                const SizedBox(width: 8),
+                _TabButton(label: 'Requests', isActive: _currentTab == 'requests', onTap: () => setState(() => _currentTab = 'requests')),
+                const SizedBox(width: 8),
+                _TabButton(label: 'Sent', isActive: _currentTab == 'sent', onTap: () => setState(() => _currentTab = 'sent')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: friendsState.loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildContent(friendsState),
             ),
           ],
-
-          const SizedBox(height: 16),
-
-          // Tabs
-          Row(
-            children: [
-              _TabButton(label: 'Friends', isActive: _currentTab == 'friends', onTap: () => setState(() => _currentTab = 'friends')),
-              const SizedBox(width: 8),
-              _TabButton(label: 'Requests', isActive: _currentTab == 'requests', onTap: () => setState(() => _currentTab = 'requests')),
-              const SizedBox(width: 8),
-              _TabButton(label: 'Sent', isActive: _currentTab == 'sent', onTap: () => setState(() => _currentTab = 'sent')),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Content
-          Expanded(
-            child: friendsState.loading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildContent(friendsState),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -139,7 +157,18 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             ),
             trailing: IconButton(
               icon: const Icon(Icons.close, color: AppColors.danger, size: 20),
-              onPressed: () async {},
+              onPressed: () async {
+                final user = ref.read(currentUserProvider);
+                if (user == null) return;
+                final friendships = await ref.read(supabaseServiceProvider).fetchFriendships(user.id, 'accepted');
+                final match = friendships.where((fr) =>
+                  (fr['sender_id'] == user.id && fr['receiver_id'] == f.id) ||
+                  (fr['receiver_id'] == user.id && fr['sender_id'] == f.id));
+                if (match.isNotEmpty) {
+                  await ref.read(supabaseServiceProvider).removeFriend(match.first['id']);
+                  _load();
+                }
+              },
             ),
           );
         },

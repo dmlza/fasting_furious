@@ -71,7 +71,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final habitState = ref.watch(habitProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Fasting Furious',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+        ),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      body: SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
@@ -91,6 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 16),
           _buildShareButtons(isDark),
         ],
+      ),
       ),
     );
   }
