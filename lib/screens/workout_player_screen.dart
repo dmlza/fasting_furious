@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../config/theme.dart';
 import '../models/exercise.dart';
+import 'workout_summary_screen.dart';
 
 class WorkoutPlayerScreen extends StatefulWidget {
   final int targetMinutes;
@@ -76,6 +78,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       });
 
       if (shouldComplete) {
+        HapticFeedback.heavyImpact();
         _completeExercise();
       }
     });
@@ -99,6 +102,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             timer.cancel();
             _isBreak = false;
             _currentExerciseIndex++;
+            HapticFeedback.mediumImpact();
             _initExercise();
           }
         });
@@ -129,55 +133,19 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   void _finishWorkout() {
     _tickTimer?.cancel();
 
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      builder: (ctx) => _buildWorkoutComplete(ctx),
-    );
-  }
+    final repsPerExercise = <String, int>{};
+    for (final e in widget.exercises) {
+      repsPerExercise[e.name] = e.isRepsBased ? e.defaultReps ?? 0 : 0;
+    }
 
-  Widget _buildWorkoutComplete(BuildContext ctx) {
-    final theme = Theme.of(ctx);
-    final totalMinutes = _elapsedSeconds ~/ 60;
-    final totalSeconds = _elapsedSeconds % 60;
-
-    return Container(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('\u{1F3C6}', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 16),
-          const Text(
-            'Workout Complete!',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You completed ${widget.exercises.length} exercises in ${totalMinutes}m ${totalSeconds}s',
-            style: TextStyle(fontSize: 14, color: theme.textTheme.bodySmall?.color),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.emerald,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => WorkoutSummaryScreen(
+          targetMinutes: widget.targetMinutes,
+          exercises: widget.exercises,
+          elapsedSeconds: _elapsedSeconds,
+          repsCompleted: repsPerExercise,
+        ),
       ),
     );
   }
@@ -621,8 +589,10 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               label: '+1 Rep',
               color: AppColors.emerald,
               onTap: () {
+                HapticFeedback.lightImpact();
                 setState(() => _repsCompleted++);
                 if (_repsCompleted >= exercise.defaultReps!) {
+                  HapticFeedback.heavyImpact();
                   _completeExercise();
                 }
               },

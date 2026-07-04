@@ -138,19 +138,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     final hasKudoed = user != null && post.reactions.any((r) => r.userId == user.id && r.emoji == '\u{1F525}');
 
-    String body;
-    switch (post.type) {
-      case 'fasting':
-        body = '$name is currently Fasting${post.durationFormatted.isNotEmpty ? ' (${post.durationFormatted} in)' : ''}';
-      case 'fasting_complete':
-        body = '$name completed a Fast${post.durationFormatted.isNotEmpty ? ' (${post.durationFormatted})' : ''}';
-      case 'exercise':
-        body = '$name is working out${post.durationFormatted.isNotEmpty ? ' (${post.durationFormatted})' : ''}';
-      case 'workout_complete':
-        body = '$name crushed a Workout!';
-      default:
-        body = '$name ${post.content ?? ''}';
-    }
+    final stats = _parseStats(post.content ?? '');
+    final hasContent = post.content != null && post.content!.isNotEmpty;
 
     return GestureDetector(
       onTap: () {
@@ -189,8 +178,30 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            // Body
-            Text(body, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.5)),
+            // Stat badges
+            if (stats.isNotEmpty) ...[
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: stats.map((s) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: s.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${s.emoji} ${s.label}',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: s.color),
+                  ),
+                )).toList(),
+              ),
+              const SizedBox(height: 10),
+            ],
+            // Body text (skip if it's just stats repeated)
+            if (hasContent && stats.isEmpty)
+              Text(post.content!, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.5)),
+            if (hasContent && stats.isNotEmpty)
+              Text(post.content!, style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color, height: 1.4)),
             if (post.imageUrl != null) ...[
               const SizedBox(height: 12),
               ClipRRect(
@@ -199,6 +210,25 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               ),
             ],
             const SizedBox(height: 12),
+            // Action buttons (Join)
+            if (stats.isNotEmpty) ...[
+              ...stats.map((s) => s.actionLabel != null ? Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _handleStatAction(s, context),
+                    icon: Icon(s.actionIcon, size: 16, color: s.color),
+                    label: Text(s.actionLabel!, style: TextStyle(color: s.color, fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: s.color.withValues(alpha: 0.3)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+              ) : const SizedBox.shrink()),
+            ],
             // Reactions
             Wrap(
               spacing: 6,
@@ -245,6 +275,70 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ],
         ),
       ),
+      ),
+    );
+  }
+
+  List<_PostStat> _parseStats(String content) {
+    final stats = <_PostStat>[];
+    if (content.contains('smoke-free')) {
+      final match = RegExp(r'(\d+) day').firstMatch(content);
+      final days = match != null ? int.tryParse(match.group(1)!) ?? 0 : 0;
+      stats.add(_PostStat(
+        emoji: '\u{1F6AB}',
+        label: '$days day${days != 1 ? 's' : ''} smoke-free',
+        color: AppColors.coral,
+        actionLabel: 'Quit Smoking',
+        actionIcon: Icons.smoke_free,
+      ));
+    }
+    if (content.contains('sugar-free')) {
+      final match = RegExp(r'(\d+) day').firstMatch(content);
+      final days = match != null ? int.tryParse(match.group(1)!) ?? 0 : 0;
+      stats.add(_PostStat(
+        emoji: '\u{1F525}',
+        label: '$days day${days != 1 ? 's' : ''} sugar-free',
+        color: AppColors.amber,
+        actionLabel: 'Go Sugar Free',
+        actionIcon: Icons.no_food,
+      ));
+    }
+    if (content.contains('Currently fasting')) {
+      stats.add(_PostStat(
+        emoji: '\u{1F37D}\u{FE0F}',
+        label: 'Currently fasting',
+        color: AppColors.indigo,
+        actionLabel: 'Start Fast',
+        actionIcon: Icons.timer,
+      ));
+    }
+    if (content.contains('Crushing') || content.contains('exercise')) {
+      final match = RegExp(r'(\d+)min').firstMatch(content);
+      final mins = match != null ? int.tryParse(match.group(1)!) ?? 0 : 0;
+      stats.add(_PostStat(
+        emoji: '\u{1F3C3}',
+        label: mins > 0 ? '$mins min exercise' : 'Exercise done',
+        color: AppColors.emerald,
+        actionLabel: 'Log Exercise',
+        actionIcon: Icons.fitness_center,
+      ));
+    }
+    return stats;
+  }
+
+  void _handleStatAction(_PostStat stat, BuildContext context) {
+    // Navigate based on stat type
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    // The MainShell will show — user can tap the appropriate card
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Head to Home to ${(stat.actionLabel ?? 'get started').toLowerCase()}!'),
+        action: SnackBarAction(
+          label: 'Home',
+          onPressed: () {
+            // Already at root, tab switch happens via MainShell
+          },
+        ),
       ),
     );
   }
@@ -319,4 +413,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 class _TypeConfig {
   final String emoji, label, color;
   const _TypeConfig(this.emoji, this.label, this.color);
+}
+
+class _PostStat {
+  final String emoji;
+  final String label;
+  final Color color;
+  final String? actionLabel;
+  final IconData? actionIcon;
+
+  const _PostStat({
+    required this.emoji,
+    required this.label,
+    required this.color,
+    this.actionLabel,
+    this.actionIcon,
+  });
 }

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/theme.dart';
 import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
+import 'providers/habit_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/landing_screen.dart';
 import 'screens/auth_screen.dart';
@@ -206,6 +207,10 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
   final _controller = TextEditingController();
   String _selectedType = 'general';
   bool _loading = false;
+  bool _shareFasting = false;
+  bool _shareSmoking = false;
+  bool _shareSugar = false;
+  bool _shareExercise = false;
 
   @override
   void dispose() {
@@ -213,10 +218,25 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
     super.dispose();
   }
 
+  String _buildContent() {
+    final parts = <String>[];
+    if (_shareFasting) parts.add('Currently fasting');
+    if (_shareSmoking) parts.add('Smoke-free streak alive');
+    if (_shareSugar) parts.add('Sugar-free streak alive');
+    if (_shareExercise) parts.add('Crushing today\'s workout');
+    final typed = _controller.text.trim();
+    if (typed.isNotEmpty) parts.add(typed);
+    return parts.join(' | ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final user = ref.read(currentUserProvider);
+    final habitState = ref.read(habitProvider);
+    final habits = habitState.habits;
+    final smokingStreak = habitState.getStreak('no_smoking');
+    final sugarStreak = habitState.getStreak('no_sugar');
 
     return Padding(
       padding: EdgeInsets.only(
@@ -225,64 +245,167 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
         top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.dividerColor,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          Text('Create Post', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: theme.textTheme.bodyLarge?.color)),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            children: [
-              _TypeChip(label: 'General', emoji: '\u{1F4AC}', isSelected: _selectedType == 'general', onTap: () => setState(() => _selectedType = 'general')),
-              _TypeChip(label: 'Fasting', emoji: '\u{1F37D}\u{FE0F}', isSelected: _selectedType == 'fasting', onTap: () => setState(() => _selectedType = 'fasting')),
-              _TypeChip(label: 'Exercise', emoji: '\u{1F3C3}', isSelected: _selectedType == 'exercise', onTap: () => setState(() => _selectedType = 'exercise')),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            maxLines: 4,
-            decoration: const InputDecoration(hintText: "What's happening?"),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _loading || user == null
-                  ? null
-                  : () async {
-                      if (_controller.text.trim().isEmpty) return;
-                      setState(() => _loading = true);
-                      await ref.read(supabaseServiceProvider).createPost(
-                        user.id,
-                        type: _selectedType,
-                        content: _controller.text.trim(),
-                      );
-                      if (mounted) {
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Posted!')),
-                        );
-                      }
-                    },
-              child: _loading
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Text('Post'),
+            const SizedBox(height: 20),
+            Text('Share Your Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: theme.textTheme.bodyLarge?.color)),
+            const SizedBox(height: 6),
+            Text(
+              'Tap stats to include them in your post',
+              style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
             ),
+            const SizedBox(height: 16),
+
+            // Stat chips
+            Text('Your Stats', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                if (habits.exerciseMinutes > 0 || habits.exercise)
+                  _StatChip(
+                    emoji: '\u{1F3C3}',
+                    label: '${habitState.habits.exerciseMinutes}min exercise',
+                    isSelected: _shareExercise,
+                    color: AppColors.emerald,
+                    onTap: () => setState(() => _shareExercise = !_shareExercise),
+                  ),
+                if (smokingStreak > 0)
+                  _StatChip(
+                    emoji: '\u{1F6AB}',
+                    label: '$smokingStreak day${smokingStreak != 1 ? 's' : ''} smoke-free',
+                    isSelected: _shareSmoking,
+                    color: AppColors.coral,
+                    onTap: () => setState(() => _shareSmoking = !_shareSmoking),
+                  ),
+                if (sugarStreak > 0)
+                  _StatChip(
+                    emoji: '\u{1F525}',
+                    label: '$sugarStreak day${sugarStreak != 1 ? 's' : ''} sugar-free',
+                    isSelected: _shareSugar,
+                    color: AppColors.amber,
+                    onTap: () => setState(() => _shareSugar = !_shareSugar),
+                  ),
+                _StatChip(
+                  emoji: '\u{1F37D}\u{FE0F}',
+                  label: 'Fasting',
+                  isSelected: _shareFasting,
+                  color: AppColors.indigo,
+                  onTap: () => setState(() => _shareFasting = !_shareFasting),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Type selector
+            Wrap(
+              spacing: 8,
+              children: [
+                _TypeChip(label: 'General', emoji: '\u{1F4AC}', isSelected: _selectedType == 'general', onTap: () => setState(() => _selectedType = 'general')),
+                _TypeChip(label: 'Fasting', emoji: '\u{1F37D}\u{FE0F}', isSelected: _selectedType == 'fasting', onTap: () => setState(() => _selectedType = 'fasting')),
+                _TypeChip(label: 'Exercise', emoji: '\u{1F3C3}', isSelected: _selectedType == 'exercise', onTap: () => setState(() => _selectedType = 'exercise')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              maxLines: 3,
+              decoration: const InputDecoration(hintText: "Add a message (optional)"),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading || user == null
+                    ? null
+                    : () async {
+                        final content = _buildContent();
+                        if (content.isEmpty) return;
+                        setState(() => _loading = true);
+                        await ref.read(supabaseServiceProvider).createPost(
+                          user.id,
+                          type: _selectedType,
+                          content: content,
+                        );
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Posted!')),
+                          );
+                        }
+                      },
+                child: _loading
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Post'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final bool isSelected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StatChip({
+    required this.emoji,
+    required this.label,
+    required this.isSelected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? color : Theme.of(context).dividerColor,
+            width: isSelected ? 2 : 1,
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isSelected ? color : Theme.of(context).textTheme.bodySmall?.color,
+            )),
+            if (isSelected) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.check_circle, size: 14, color: color),
+            ],
+          ],
+        ),
       ),
     );
   }
