@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
@@ -77,7 +76,6 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
     for (final r in post.reactions) {
       reactionCounts[r.emoji] = (reactionCounts[r.emoji] ?? 0) + 1;
     }
-    final hasKudoed = user != null && post.reactions.any((r) => r.userId == user.id && r.emoji == '\u{1F525}');
 
     return Scaffold(
       appBar: AppBar(

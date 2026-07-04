@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../config/theme.dart';
-import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -17,7 +16,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final habitState = ref.watch(habitProvider);
 
     return Scaffold(
@@ -85,8 +83,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   }
 
   Widget _buildChartSection(dynamic state) {
-    final theme = Theme.of(context);
-
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),

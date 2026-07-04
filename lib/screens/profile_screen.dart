@@ -6,6 +6,7 @@ import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/friends_provider.dart';
 import 'stats_screen.dart';
+import 'workout_history_screen.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -179,6 +180,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         const Text('Statistics', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                         Text(
                           'View your fasting history & streaks',
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).textTheme.bodySmall?.color),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Workout History button
+        Card(
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const WorkoutHistoryScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.emerald.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.fitness_center, color: AppColors.emerald, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Workout History', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text(
+                          'View past workouts and progress',
                           style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
                         ),
                       ],

@@ -89,6 +89,18 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
         durationMinutes: widget.elapsedSeconds ~/ 60,
       );
 
+      await ref.read(supabaseServiceProvider).saveWorkoutHistory(
+        user.id,
+        targetMinutes: widget.targetMinutes,
+        elapsedSeconds: widget.elapsedSeconds,
+        exerciseCount: widget.exercises.length,
+        totalReps: _totalReps,
+        musclesWorked: _musclesWorked.join(', '),
+        categoryBreakdown: _categoryBreakdown.entries
+            .map((e) => '${e.key.label}: ${e.value}')
+            .join(', '),
+      );
+
       if (mounted) {
         setState(() {
           _shared = true;

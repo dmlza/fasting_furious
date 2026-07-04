@@ -252,6 +252,29 @@ class SupabaseService {
     });
   }
 
+  // Workout History
+  Future<void> saveWorkoutHistory(String userId, {required int targetMinutes, required int elapsedSeconds, required int exerciseCount, required int totalReps, required String musclesWorked, String? categoryBreakdown}) {
+    return client.from('workout_history').insert({
+      'user_id': userId,
+      'target_minutes': targetMinutes,
+      'elapsed_seconds': elapsedSeconds,
+      'exercise_count': exerciseCount,
+      'total_reps': totalReps,
+      'muscles_worked': musclesWorked,
+      'category_breakdown': categoryBreakdown,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> fetchWorkoutHistory(String userId, {int limit = 50}) async {
+    final data = await client
+        .from('workout_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(limit);
+    return List<Map<String, dynamic>>.from(data);
+  }
+
   // Realtime
   RealtimeChannel subscribeToFeed(void Function() onUpdate) {
     return client.channel('feed-changes')

@@ -49,9 +49,7 @@ class AuthGate extends ConsumerWidget {
 
     return authState.when(
       data: (state) {
-        final hasSession = state.session?.user != null;
-        print('[AUTH-GATE] authState data: hasSession=$hasSession, event=${state.event}');
-        if (hasSession) {
+        if (state.session?.user != null) {
           return ProfileLoader(child: const MainShell());
         }
         return const LandingGate();
@@ -95,13 +93,8 @@ class _ProfileLoaderState extends ConsumerState<ProfileLoader> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = ref.read(currentUserProvider);
-      print('[PROFILE] ProfileLoader init: user=${user?.id}');
       if (user != null) {
-        ref.read(profileProvider.notifier).fetchProfile(user.id).then((_) {
-          print('[PROFILE] fetchProfile completed');
-        }).catchError((e) {
-          print('[PROFILE] fetchProfile error: $e');
-        });
+        ref.read(profileProvider.notifier).fetchProfile(user.id);
       }
     });
   }
