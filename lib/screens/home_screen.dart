@@ -6,6 +6,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../models/models.dart';
+import '../widgets/fasting_timer_ring.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,
@@ -54,9 +55,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final elapsed = DateTime.now().difference(timer.startedAt);
     final target = Duration(minutes: timer.targetMinutes);
     final remaining = target - elapsed;
+    final progress = elapsed.inMinutes / timer.targetMinutes;
+
     setState(() {
       _timerRemaining = remaining.isNegative ? Duration.zero : remaining;
-      _timerPhase = remaining.isNegative ? '\u2705 EATING WINDOW' : 'FASTING WINDOW';
+      _timerPhase = remaining.isNegative ? 'EATING WINDOW' : 'FASTING';
     });
   }
 
@@ -82,191 +85,147 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         scrolledUnderElevation: 0,
       ),
       body: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          _buildFastingHero(habitState, isDark),
-          const SizedBox(height: 16),
-          if (habitState.gridLayout.contains('no_sugar'))
-            _buildSugarCard(habitState, isDark),
-          if (habitState.gridLayout.contains('no_sugar'))
-            const SizedBox(height: 16),
-          if (habitState.gridLayout.contains('exercise'))
-            _buildExerciseCard(habitState, isDark),
-          if (habitState.gridLayout.contains('exercise'))
-            const SizedBox(height: 16),
-          if (habitState.gridLayout.contains('no_smoking'))
-            _buildSmokingCard(habitState, isDark),
-          if (habitState.gridLayout.contains('no_smoking'))
-            const SizedBox(height: 16),
-          _buildShareButtons(isDark),
-        ],
-      ),
-      ),
-    );
-  }
-
-  Widget _buildFastingHero(HabitState state, bool isDark) {
-    final timer = state.activeTimer;
-    final isActive = timer != null;
-    final preset = _fastingPresets[_selectedPreset] ?? 960;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _showFastingScience(state),
-                  child: const Text('\u{1F9EA} Science'),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isActive
-                            ? '${_timerRemaining.inHours.toString().padLeft(2, '0')}:${(_timerRemaining.inMinutes % 60).toString().padLeft(2, '0')}:${(_timerRemaining.inSeconds % 60).toString().padLeft(2, '0')}'
-                            : '--:--:--',
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _timerPhase,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: _fastingPresets.keys.map((p) {
-                          final isSelected = p == _selectedPreset;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(p),
-                              selected: isSelected,
-                              onSelected: isActive ? null : (_) => setState(() => _selectedPreset = p),
-                              selectedColor: AppColors.indigo.withValues(alpha: 0.15),
-                              labelStyle: TextStyle(
-                                color: isSelected ? AppColors.indigo : Theme.of(context).textTheme.bodySmall?.color,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-                      if (!isActive)
-                        ElevatedButton(
-                          onPressed: () async {
-                            final user = ref.read(currentUserProvider);
-                            if (user == null) return;
-                            final data = await ref.read(supabaseServiceProvider).startTimer(
-                              user.id,
-                              type: 'fasting',
-                              targetMinutes: preset,
-                              presetType: _selectedPreset,
-                            );
-                            ref.read(habitProvider.notifier).setActiveTimer(ActiveTimer.fromMap(data));
-                            _startTickIfNeeded();
-                          },
-                          child: const Text('Start Fast'),
-                        )
-                      else
-                        ElevatedButton(
-                          onPressed: () async {
-                            final service = ref.read(supabaseServiceProvider);
-                            final user = ref.read(currentUserProvider);
-                            if (user == null) return;
-                            final elapsed = DateTime.now().difference(timer.startedAt).inSeconds;
-                            final type = elapsed >= timer.targetMinutes * 60 ? 'fasting_complete' : 'fasting';
-                            await service.stopTimer(timer.id);
-                            if (type == 'fasting_complete') {
-                              await service.createPost(user.id, type: 'fasting_complete', content: 'Completed a ${_selectedPreset} fast!');
-                            } else {
-                              await service.createPost(user.id, type: 'fasting', content: 'Broke fast early', durationMinutes: elapsed ~/ 60);
-                            }
-                            ref.read(habitProvider.notifier).setActiveTimer(null);
-                            _tickTimer?.cancel();
-                            setState(() {
-                              _timerRemaining = Duration.zero;
-                              _timerPhase = 'READY';
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.coral),
-                          child: const Text('End Fast'),
-                        ),
-                    ],
-                  ),
-                ),
-                _buildActivityRings(state),
-              ],
-            ),
+            _buildTimerSection(habitState, isDark),
+            const SizedBox(height: 24),
+            if (habitState.gridLayout.contains('no_sugar'))
+              _buildSugarCard(habitState, isDark),
+            if (habitState.gridLayout.contains('no_sugar'))
+              const SizedBox(height: 16),
+            if (habitState.gridLayout.contains('exercise'))
+              _buildExerciseCard(habitState, isDark),
+            if (habitState.gridLayout.contains('exercise'))
+              const SizedBox(height: 16),
+            if (habitState.gridLayout.contains('no_smoking'))
+              _buildSmokingCard(habitState, isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActivityRings(HabitState state) {
+  Widget _buildTimerSection(HabitState state, bool isDark) {
     final timer = state.activeTimer;
-    final outerProgress = timer != null
+    final isActive = timer != null;
+    final preset = _fastingPresets[_selectedPreset] ?? 960;
+    final total = Duration(minutes: preset);
+
+    final progress = isActive
         ? min(1.0, DateTime.now().difference(timer.startedAt).inMinutes / timer.targetMinutes)
         : 0.0;
-    final exerciseProgress = min(1.0, (state.habits.exerciseMinutes) / 30.0);
-    final sugarStreak = state.getStreak('no_sugar');
-    final habitProgress = min(1.0, sugarStreak / 14.0);
 
-    return SizedBox(
-      width: 130,
-      height: 130,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CircularProgressIndicator(
-            value: outerProgress,
-            strokeWidth: 6,
-            backgroundColor: Theme.of(context).dividerColor,
-            valueColor: const AlwaysStoppedAnimation(AppColors.indigo),
-          ),
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: CircularProgressIndicator(
-              value: exerciseProgress,
-              strokeWidth: 6,
-              backgroundColor: Theme.of(context).dividerColor,
-              valueColor: const AlwaysStoppedAnimation(AppColors.emerald),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Timer Ring
+            FastingTimerRing(
+              progress: progress,
+              remaining: _timerRemaining,
+              total: total,
+              phase: _timerPhase,
+              isActive: isActive,
+              preset: _selectedPreset,
             ),
-          ),
-          SizedBox(
-            width: 70,
-            height: 70,
-            child: CircularProgressIndicator(
-              value: habitProgress,
-              strokeWidth: 6,
-              backgroundColor: Theme.of(context).dividerColor,
-              valueColor: const AlwaysStoppedAnimation(AppColors.amber),
+            const SizedBox(height: 24),
+
+            // Preset selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _fastingPresets.keys.map((p) {
+                final isSelected = p == _selectedPreset;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    label: Text(p),
+                    selected: isSelected,
+                    onSelected: isActive ? null : (_) => setState(() => _selectedPreset = p),
+                    selectedColor: AppColors.indigo.withValues(alpha: 0.15),
+                    labelStyle: TextStyle(
+                      color: isSelected ? AppColors.indigo : Theme.of(context).textTheme.bodySmall?.color,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? AppColors.indigo : Theme.of(context).dividerColor,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+
+            // Action button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: !isActive
+                  ? ElevatedButton(
+                      onPressed: () async {
+                        final user = ref.read(currentUserProvider);
+                        if (user == null) return;
+                        final data = await ref.read(supabaseServiceProvider).startTimer(
+                          user.id,
+                          type: 'fasting',
+                          targetMinutes: preset,
+                          presetType: _selectedPreset,
+                        );
+                        ref.read(habitProvider.notifier).setActiveTimer(ActiveTimer.fromMap(data));
+                        _startTickIfNeeded();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.indigo,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Start Fast', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    )
+                  : ElevatedButton(
+                      onPressed: () async {
+                        final service = ref.read(supabaseServiceProvider);
+                        final user = ref.read(currentUserProvider);
+                        if (user == null) return;
+                        final elapsed = DateTime.now().difference(timer.startedAt).inSeconds;
+                        final type = elapsed >= timer.targetMinutes * 60 ? 'fasting_complete' : 'fasting';
+                        await service.stopTimer(timer.id);
+                        if (type == 'fasting_complete') {
+                          await service.createPost(user.id, type: 'fasting_complete', content: 'Completed a ${_selectedPreset} fast!');
+                        } else {
+                          await service.createPost(user.id, type: 'fasting', content: 'Broke fast early', durationMinutes: elapsed ~/ 60);
+                        }
+                        ref.read(habitProvider.notifier).setActiveTimer(null);
+                        _tickTimer?.cancel();
+                        setState(() {
+                          _timerRemaining = Duration.zero;
+                          _timerPhase = 'READY';
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.coral,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('End Fast', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    ),
+            ),
+
+            // Science button
+            if (isActive) ...[
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () => _showFastingScience(state),
+                icon: const Icon(Icons.science_outlined, size: 18),
+                label: const Text('Fasting Science'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -287,30 +246,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '\u{1F525} $streak Day${streak != 1 ? 's' : ''}',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 4),
-              const Text('No Sugar Streak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
               Row(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('\u{1F525}', style: TextStyle(fontSize: 20)),
+                  ),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: LinearProgressIndicator(
-                      value: pct / 100,
-                      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
-                      valueColor: const AlwaysStoppedAnimation(AppColors.amber),
-                      borderRadius: BorderRadius.circular(2),
-                      minHeight: 4,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$streak Day${streak != 1 ? 's' : ''}',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                        const Text('No Sugar Streak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${hoursLeft}h til next day',
-                    style: TextStyle(fontSize: 10, color: Theme.of(context).textTheme.bodySmall?.color),
-                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).textTheme.bodySmall?.color),
                 ],
+              ),
+              const SizedBox(height: 14),
+              LinearProgressIndicator(
+                value: pct / 100,
+                backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+                valueColor: const AlwaysStoppedAnimation(AppColors.amber),
+                borderRadius: BorderRadius.circular(2),
+                minHeight: 4,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${hoursLeft}h until midnight',
+                style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color),
               ),
             ],
           ),
@@ -331,24 +304,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Row(
                 children: [
-                  const Text('\u{1F3C3}', style: TextStyle(fontSize: 28)),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => _showExerciseModal(),
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: AppColors.emerald,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.emerald.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('\u{1F3C3}', style: TextStyle(fontSize: 20)),
                   ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${state.habits.exerciseMinutes} / 30 min',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                        const Text("Today's Workout", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).textTheme.bodySmall?.color),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                '${state.habits.exerciseMinutes} / 30 min',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              const SizedBox(height: 14),
+              LinearProgressIndicator(
+                value: min(1.0, state.habits.exerciseMinutes / 30.0),
+                backgroundColor: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+                valueColor: const AlwaysStoppedAnimation(AppColors.emerald),
+                borderRadius: BorderRadius.circular(2),
+                minHeight: 4,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
-                "Today's Workout",
-                style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color, letterSpacing: 1),
+                '${max(0, 30 - state.habits.exerciseMinutes)} min remaining',
+                style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color),
               ),
             ],
           ),
@@ -365,15 +356,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.coral.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('\u{1F6AB}', style: TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '\u{1F525} $streak Day${streak != 1 ? 's' : ''}',
+                    '$streak Day${streak != 1 ? 's' : ''}',
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(height: 4),
                   const Text('No Smoking Streak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 ],
               ),
@@ -390,35 +389,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildShareButtons(bool isDark) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.share, size: 18),
-            label: const Text('Update & Share Status'),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.camera_alt, size: 18),
-            label: const Text('Photo Check-in'),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Theme.of(context).colorScheme.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
