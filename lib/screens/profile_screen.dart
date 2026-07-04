@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/friends_provider.dart';
+import 'stats_screen.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -144,6 +145,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onChanged: (_) => ref.read(themeProvider.notifier).toggle(),
                 ),
               ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Stats button
+        Card(
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StatsScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.indigo.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.bar_chart, color: AppColors.indigo, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Statistics', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text(
+                          'View your fasting history & streaks',
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).textTheme.bodySmall?.color),
+                ],
+              ),
             ),
           ),
         ),
