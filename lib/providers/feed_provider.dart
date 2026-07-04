@@ -1,0 +1,97 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/models.dart';
+import 'auth_provider.dart';
+
+final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
+  return FeedNotifier(ref);
+});
+
+class FeedState {
+  final List<Post> posts;
+  final bool loading;
+
+  FeedState({this.posts = const [], this.loading = false});
+
+  FeedState copyWith({List<Post>? posts, bool? loading}) {
+    return FeedState(posts: posts ?? this.posts, loading: loading ?? this.loading);
+  }
+}
+
+class FeedNotifier extends StateNotifier<FeedState> {
+  final Ref ref;
+  FeedNotifier(this.ref) : super(FeedState());
+
+  static const _typeConfig = {
+    'fasting': _TypeConfig('\u{1F37D}\u{FE0F}', 'Fasting', 'indigo'),
+    'fasting_complete': _TypeConfig('\u2705', 'Fast Complete', 'indigo'),
+    'exercise': _TypeConfig('\u{1F3C3}', 'Exercise', 'emerald'),
+    'workout_complete': _TypeConfig('\u{1F3C6}', 'Workout Done', 'emerald'),
+    'checkin': _TypeConfig('\u{1F4F8}', 'Check-in', 'neutral'),
+    'general': _TypeConfig('\u{1F4AC}', 'Update', 'neutral'),
+  };
+
+  _TypeConfig getConfig(String type) => _typeConfig[type] ?? _typeConfig['general']!;
+
+  Future<void> fetchFeed(String userId) async {
+    state = state.copyWith(loading: true);
+    final service = ref.read(supabaseServiceProvider);
+
+    final friendships = await service.client
+        .from('friendships')
+        .select('sender_id, receiver_id')
+        .or('sender_id.eq.$userId,receiver_id.eq.$userId')
+        .eq('status', 'accepted');
+
+    final friendIds = (friendships as List).map((f) =>
+      f['sender_id'] == userId ? f['receiver_id'] as String : f['sender_id'] as String
+    ).toList();
+    friendIds.add(userId);
+
+    final postsData = await service.fetchFeed(friendIds);
+    final postIds = postsData.map((p) => p['id'] as String).toList();
+
+    List<Map<String, dynamic>> reactions = [];
+    if (postIds.isNotEmpty) {
+      reactions = await service.fetchReactions(postIds);
+    }
+
+    final reactionsByPost = <String, List<Reaction>>{};
+    for (final r in reactions) {
+      final reaction = Reaction.fromMap(r);
+      reactionsByPost.putIfAbsent(reaction.postId, () => []).add(reaction);
+    }
+
+    final posts = postsData.map((p) {
+      final postReactions = reactionsByPost[p['id']] ?? [];
+      final profileData = p['profile'] as Map<String, dynamic>?;
+      return Post.fromMap(p, profileData: profileData).copyWith(
+        reactions: postReactions,
+        hypeCount: postReactions.where((r) => r.emoji == '\u{1F525}').length,
+      );
+    }).toList();
+
+    state = FeedState(posts: posts, loading: false);
+  }
+
+  Future<void> toggleReaction(String userId, String postId, String emoji) async {
+    final service = ref.read(supabaseServiceProvider);
+    final existing = state.posts
+        .where((p) => p.id == postId)
+        .expand((p) => p.reactions)
+        .where((r) => r.userId == userId && r.emoji == emoji)
+        .toList();
+
+    if (existing.isNotEmpty) {
+      await service.removeReaction(userId, postId);
+    } else {
+      await service.addReaction(userId, postId, emoji);
+    }
+  }
+}
+
+class _TypeConfig {
+  final String emoji;
+  final String label;
+  final String color;
+  const _TypeConfig(this.emoji, this.label, this.color);
+}
