@@ -18,8 +18,7 @@ final currentUserProvider = Provider<User?>((ref) {
 });
 
 final profileProvider = StateNotifierProvider<ProfileNotifier, Profile?>((ref) {
-  final user = ref.watch(currentUserProvider);
-  return ProfileNotifier(ref)..init(user);
+  return ProfileNotifier(ref);
 });
 
 class ProfileNotifier extends StateNotifier<Profile?> {
@@ -32,7 +31,22 @@ class ProfileNotifier extends StateNotifier<Profile?> {
 
   Future<void> fetchProfile(String userId) async {
     final data = await ref.read(supabaseServiceProvider).fetchProfile(userId);
-    if (data != null) state = Profile.fromMap(data);
+    if (data != null) {
+      state = Profile.fromMap(data);
+    } else {
+      // Profile doesn't exist yet - create it from user metadata
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        final username = user.userMetadata?['username'] as String? ?? user.email?.split('@').first;
+        final displayName = user.userMetadata?['display_name'] as String? ?? username;
+        await ref.read(supabaseServiceProvider).client.from('profiles').insert({
+          'id': user.id,
+          'username': username,
+          'display_name': displayName,
+        });
+        state = Profile(id: user.id, username: username, displayName: displayName);
+      }
+    }
   }
 
   Future<void> updateProfile(String userId, {String? displayName, String? username, String? bio}) async {

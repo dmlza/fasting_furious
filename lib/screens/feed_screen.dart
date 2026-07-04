@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
 import '../models/models.dart';
+import 'activity_detail_screen.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
 
@@ -135,7 +136,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       reactionCounts[r.emoji] = (reactionCounts[r.emoji] ?? 0) + 1;
     }
 
-    final hasHyped = user != null && post.reactions.any((r) => r.userId == user.id && r.emoji == '\u{1F525}');
+    final hasKudoed = user != null && post.reactions.any((r) => r.userId == user.id && r.emoji == '\u{1F525}');
 
     String body;
     switch (post.type) {
@@ -151,7 +152,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         body = '$name ${post.content ?? ''}';
     }
 
-    return Card(
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => ActivityDetailScreen(post: post)),
+        );
+      },
+      child: Card(
       margin: const EdgeInsets.only(bottom: 16),
       color: _cardColor(config.color, context),
       child: Padding(
@@ -212,35 +219,32 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
               }).toList(),
             ),
             const SizedBox(height: 8),
-            // Hype button
+            // Kudos button
             SizedBox(
               width: double.infinity,
               child: ActionChip(
                 label: Text(
-                  '\u{1F525} Send Hype${post.hypeCount > 0 ? ' (${post.hypeCount})' : ''}',
+                  '\u{1F525} Send Kudos${post.hypeCount > 0 ? ' (${post.hypeCount})' : ''}',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: hasHyped ? AppColors.hype : Theme.of(context).textTheme.bodySmall?.color,
+                    color: hasKudoed ? AppColors.hype : Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
                 onPressed: user != null
                     ? () async {
-                        if (hasHyped) {
-                          await ref.read(feedProvider.notifier).toggleReaction(user.id, post.id, '\u{1F525}');
-                        } else {
-                          await ref.read(feedProvider.notifier).toggleReaction(user.id, post.id, '\u{1F525}');
-                        }
+                        await ref.read(feedProvider.notifier).toggleReaction(user.id, post.id, '\u{1F525}');
                       }
                     : null,
-                backgroundColor: hasHyped ? AppColors.hype.withValues(alpha: 0.06) : Theme.of(context).colorScheme.surface,
+                backgroundColor: hasKudoed ? AppColors.hype.withValues(alpha: 0.06) : Theme.of(context).colorScheme.surface,
                 side: BorderSide(
-                  color: hasHyped ? AppColors.hype.withValues(alpha: 0.2) : Theme.of(context).dividerColor,
+                  color: hasKudoed ? AppColors.hype.withValues(alpha: 0.2) : Theme.of(context).dividerColor,
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 8),
               ),
             ),
           ],
         ),
+      ),
       ),
     );
   }

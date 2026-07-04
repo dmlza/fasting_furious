@@ -49,7 +49,7 @@ class AuthGate extends ConsumerWidget {
     return authState.when(
       data: (state) {
         if (state.session?.user != null) {
-          return const MainShell();
+          return ProfileLoader(child: const MainShell());
         }
         return const LandingGate();
       },
@@ -76,6 +76,30 @@ class LandingGate extends ConsumerWidget {
       },
     );
   }
+}
+
+class ProfileLoader extends ConsumerStatefulWidget {
+  final Widget child;
+  const ProfileLoader({super.key, required this.child});
+
+  @override
+  ConsumerState<ProfileLoader> createState() => _ProfileLoaderState();
+}
+
+class _ProfileLoaderState extends ConsumerState<ProfileLoader> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        ref.read(profileProvider.notifier).fetchProfile(user.id);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class MainShell extends ConsumerStatefulWidget {

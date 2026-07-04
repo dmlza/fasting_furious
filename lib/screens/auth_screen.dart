@@ -21,6 +21,24 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuth();
+    });
+  }
+
+  void _checkAuth() {
+    ref.listen(authStateProvider, (prev, next) {
+      next.whenData((state) {
+        if (state.session?.user != null && mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      });
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -76,7 +94,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           return;
         }
         setState(() {
-          _success = 'Account created! Check your email for the confirmation link.';
+          _success = 'Account created! You can now sign in.';
           _isLogin = true;
           _loading = false;
           _emailController.clear();
