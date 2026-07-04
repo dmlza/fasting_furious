@@ -9,6 +9,7 @@ import '../models/models.dart';
 import '../widgets/fasting_timer_ring.dart';
 import '../widgets/health_recovery_timeline.dart';
 import '../widgets/metabolic_dashboard.dart';
+import 'workout_setup_screen.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,
@@ -57,7 +58,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final elapsed = DateTime.now().difference(timer.startedAt);
     final target = Duration(minutes: timer.targetMinutes);
     final remaining = target - elapsed;
-    final progress = elapsed.inMinutes / timer.targetMinutes;
 
     setState(() {
       _timerRemaining = remaining.isNegative ? Duration.zero : remaining;
@@ -533,19 +533,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('\u{1F3C3} Log Workout Minutes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const Text('\u{1F3C3} Start Workout', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Text(
+              'Choose your workout duration',
+              style: TextStyle(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color),
+            ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [5, 10, 15, 20, 30, 45].map((m) {
-                return ActionChip(
-                  label: Text('$m min'),
-                  onPressed: () => _logExercise(m, ctx),
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  side: BorderSide(color: Theme.of(context).dividerColor),
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => WorkoutSetupScreen(targetMinutes: m)),
+                    );
+                  },
+                  child: Container(
+                    width: 80,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.emerald.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.emerald.withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      children: [
+                        Text('$m', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.emerald)),
+                        const Text('min', style: TextStyle(fontSize: 12, color: AppColors.emerald)),
+                      ],
+                    ),
+                  ),
                 );
               }).toList(),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _showCustomDurationPicker();
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.timer_outlined, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Custom Duration',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).textTheme.bodySmall?.color),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -554,11 +603,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Future<void> _logExercise(int minutes, BuildContext ctx) async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-    await ref.read(habitProvider.notifier).logExerciseMinutes(user.id, minutes);
-    if (mounted) Navigator.of(ctx).pop();
+  void _showCustomDurationPicker() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Custom Duration'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Minutes',
+            suffixText: 'min',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final minutes = int.tryParse(controller.text);
+              if (minutes != null && minutes > 0) {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => WorkoutSetupScreen(targetMinutes: minutes)),
+                );
+              }
+            },
+            child: const Text('Start'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
