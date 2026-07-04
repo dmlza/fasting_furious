@@ -31,7 +31,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void _checkAuth() {
     ref.listen(authStateProvider, (prev, next) {
       next.whenData((state) {
+        print('[AUTH-SCREEN] authState listener: session=${state.session != null}, mounted=$mounted');
         if (state.session?.user != null && mounted) {
+          print('[AUTH-SCREEN] Popping auth screen');
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       });
@@ -76,12 +78,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       final service = ref.read(supabaseServiceProvider);
       if (_isLogin) {
+        print('[AUTH] Signing in with ${_emailController.text.trim()}');
         final result = await service.signInWithEmail(
           _emailController.text.trim(),
           _passwordController.text,
         );
+        print('[AUTH] Sign-in result: user=${result.user?.id}, session=${result.session != null}');
         if (result.user == null) {
           setState(() { _error = 'No account found with this email'; _loading = false; });
+        } else if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } else {
         final result = await service.signUpWithEmail(
