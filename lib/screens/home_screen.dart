@@ -8,6 +8,7 @@ import '../providers/habit_provider.dart';
 import '../models/models.dart';
 import '../widgets/fasting_timer_ring.dart';
 import '../widgets/health_recovery_timeline.dart';
+import '../widgets/metabolic_dashboard.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,
@@ -447,77 +448,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ? DateTime.now().difference(timer.startedAt).inMinutes / 60.0
         : 0.0;
 
-    final stages = [
-      _StageData('\u{1FA78}', 'Blood Sugar Rise / Decline', 'Hours 0-4', 0, 4, elapsedH),
-      _StageData('\u26A1', 'Gluconeogenesis', 'Hours 5-12', 5, 12, elapsedH),
-      _StageData('\u{1F504}', 'Autophagy Phase', 'Hours 13-16', 13, 16, elapsedH),
-    ];
-
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('\u{1F9EA} Fasting Science Timeline', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 20),
-            ...stages.map((s) => _buildScienceStage(s)),
-            const SizedBox(height: 16),
-          ],
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (ctx, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: MetabolicDashboard(hoursElapsed: elapsedH),
         ),
-      ),
-    );
-  }
-
-  Widget _buildScienceStage(_StageData stage) {
-    final completed = stage.elapsed >= stage.end;
-    final active = stage.elapsed >= stage.start && stage.elapsed < stage.end;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: completed
-            ? AppColors.indigo
-            : active
-                ? AppColors.indigo.withValues(alpha: 0.05)
-                : Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: active ? Border.all(color: AppColors.indigo, width: 1.5) : null,
-      ),
-      child: Row(
-        children: [
-          Text(stage.icon, style: const TextStyle(fontSize: 24)),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stage.label,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: completed ? Colors.white : null,
-                  ),
-                ),
-                Text(
-                  stage.range,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: completed ? Colors.white70 : Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            completed ? '\u2705' : active ? '\u25CB' : '\u{1F512}',
-            style: TextStyle(fontSize: 16, color: completed ? Colors.white : null),
-          ),
-        ],
       ),
     );
   }
@@ -617,12 +560,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     await ref.read(habitProvider.notifier).logExerciseMinutes(user.id, minutes);
     if (mounted) Navigator.of(ctx).pop();
   }
-}
-
-class _StageData {
-  final String icon, label, range;
-  final double start, end, elapsed;
-  const _StageData(this.icon, this.label, this.range, this.start, this.end, this.elapsed);
 }
 
 class _MilestoneData {
