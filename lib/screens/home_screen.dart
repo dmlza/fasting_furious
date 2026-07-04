@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../models/models.dart';
 import '../widgets/fasting_timer_ring.dart';
+import '../widgets/health_recovery_timeline.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,
@@ -350,43 +351,91 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildSmokingCard(HabitState state, bool isDark) {
     final streak = state.getStreak('no_smoking');
-    return Card(
-      color: AppColors.coral.withValues(alpha: 0.08),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.coral.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text('\u{1F6AB}', style: TextStyle(fontSize: 20)),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    final timeSinceQuit = Duration(days: streak);
+
+    return GestureDetector(
+      onTap: () => _showHealthTimeline(timeSinceQuit),
+      child: Card(
+        color: AppColors.coral.withValues(alpha: 0.08),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    '$streak Day${streak != 1 ? 's' : ''}',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.coral.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text('\u{1F6AB}', style: TextStyle(fontSize: 20)),
                   ),
-                  const Text('No Smoking Streak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$streak Day${streak != 1 ? 's' : ''}',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                        ),
+                        const Text('No Smoking Streak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: state.habits.noSmoking,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: AppColors.coral,
+                    onChanged: (_) {
+                      final user = ref.read(currentUserProvider);
+                      if (user != null) ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
+                    },
+                  ),
                 ],
               ),
-            ),
-            Switch(
-              value: state.habits.noSmoking,
-              activeThumbColor: Colors.white,
-              activeTrackColor: AppColors.coral,
-              onChanged: (_) {
-                final user = ref.read(currentUserProvider);
-                if (user != null) ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
-              },
-            ),
-          ],
+              const SizedBox(height: 14),
+              HealthRecoveryTimeline(
+                timeSinceQuit: timeSinceQuit,
+                compact: true,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    'View Timeline',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.coral),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.coral),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHealthTimeline(Duration timeSinceQuit) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (ctx, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: HealthRecoveryTimeline(
+            timeSinceQuit: timeSinceQuit,
+            compact: false,
+          ),
         ),
       ),
     );
