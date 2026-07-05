@@ -38,14 +38,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _init() async {
     final user = ref.read(currentUserProvider);
-    if (user == null) return;
-    await ref.read(friendsProvider.notifier).fetchAll(user.id);
-    await ref.read(habitProvider.notifier).fetchAll(user.id);
-    final results = await Future.wait([
-      ref.read(supabaseServiceProvider).getPostCount(user.id),
-      _fetchMyPosts(user.id),
-    ]);
-    if (mounted) setState(() { _postCount = results[0] as int; _initialLoading = false; });
+    if (user == null) {
+      if (mounted) setState(() => _initialLoading = false);
+      return;
+    }
+    try {
+      await ref.read(friendsProvider.notifier).fetchAll(user.id);
+      await ref.read(habitProvider.notifier).fetchAll(user.id);
+      final results = await Future.wait([
+        ref.read(supabaseServiceProvider).getPostCount(user.id),
+        _fetchMyPosts(user.id),
+      ]);
+      if (mounted) setState(() { _postCount = results[0] as int; _initialLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _initialLoading = false);
+    }
   }
 
   Future<void> _refresh() async {
