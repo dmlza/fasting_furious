@@ -36,16 +36,20 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
 
   Future<void> _fetchComments() async {
     setState(() => _loadingComments = true);
-    final data = await ref.read(supabaseServiceProvider).client
-        .from('comments')
-        .select('*, user:user_id(username, display_name)')
-        .eq('post_id', widget.post.id)
-        .order('created_at', ascending: true);
-    if (mounted) {
-      setState(() {
-        _comments = List<Map<String, dynamic>>.from(data);
-        _loadingComments = false;
-      });
+    try {
+      final data = await ref.read(supabaseServiceProvider).client
+          .from('comments')
+          .select('*, user:user_id(username, display_name)')
+          .eq('post_id', widget.post.id)
+          .order('created_at', ascending: true);
+      if (mounted) {
+        setState(() {
+          _comments = List<Map<String, dynamic>>.from(data);
+          _loadingComments = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingComments = false);
     }
   }
 
@@ -54,14 +58,22 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
     if (user == null || _commentController.text.trim().isEmpty) return;
 
     setState(() => _posting = true);
-    await ref.read(supabaseServiceProvider).client.from('comments').insert({
-      'user_id': user.id,
-      'post_id': widget.post.id,
-      'content': _commentController.text.trim(),
-    });
-    _commentController.clear();
-    await _fetchComments();
-    setState(() => _posting = false);
+    try {
+      await ref.read(supabaseServiceProvider).client.from('comments').insert({
+        'user_id': user.id,
+        'post_id': widget.post.id,
+        'content': _commentController.text.trim(),
+      });
+      _commentController.clear();
+      await _fetchComments();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to post comment. Please try again.')),
+        );
+      }
+    }
+    if (mounted) setState(() => _posting = false);
   }
 
   @override

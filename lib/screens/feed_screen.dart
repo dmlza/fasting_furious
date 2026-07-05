@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
 import '../providers/notifications_provider.dart';
 import '../models/models.dart';
+import '../widgets/skeleton.dart';
 import 'activity_detail_screen.dart';
 import 'public_profile_screen.dart';
 import 'notifications_screen.dart';
@@ -38,6 +39,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     final user = ref.read(currentUserProvider);
     final notificationsState = ref.watch(notificationsProvider);
     final unreadCount = notificationsState.unreadCount;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -64,9 +66,49 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         ],
       ),
       body: feedState.loading && feedState.posts.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : feedState.posts.isEmpty
-              ? const Center(child: Text('No updates yet. Add friends to see their progress!'))
+          ? const FeedSkeleton()
+          : feedState.error != null && feedState.posts.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.wifi_off, size: 48, color: theme.textTheme.bodySmall?.color),
+                      const SizedBox(height: 12),
+                      Text(feedState.error!, style: TextStyle(fontSize: 14, color: theme.textTheme.bodySmall?.color)),
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: _fetch,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : feedState.posts.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.people_outline, size: 48, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.4)),
+                          const SizedBox(height: 12),
+                          const Text('No activity yet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Add friends to see their progress,\nor share your own!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 13, color: theme.textTheme.bodySmall?.color),
+                          ),
+                          const SizedBox(height: 20),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              // Navigate to search tab
+                              Navigator.of(context).popUntil((route) => route.isFirst);
+                            },
+                            icon: const Icon(Icons.person_add, size: 16),
+                            label: const Text('Find Friends'),
+                          ),
+                        ],
+                      ),
+                    )
               : RefreshIndicator(
                   onRefresh: _fetch,
                   child: ListView(
@@ -292,6 +334,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                 onPressed: user != null
                     ? () async {
                         await ref.read(feedProvider.notifier).toggleReaction(user.id, post.id, '\u{1F525}');
+                        if (mounted && !hasKudoed) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('\u{1F525} Kudos sent to ${post.profile?.name ?? 'someone'}!'),
+                              duration: const Duration(seconds: 1),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                        }
                       }
                     : null,
                 backgroundColor: hasKudoed ? AppColors.hype.withValues(alpha: 0.06) : Theme.of(context).colorScheme.surface,

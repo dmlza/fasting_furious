@@ -257,7 +257,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
+          const SnackBar(content: Text('Failed to pick image. Please try again.')),
         );
       }
     }
@@ -279,7 +279,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload image: $e')),
+          const SnackBar(content: Text('Failed to upload image. Please try again.')),
         );
       }
       return null;
@@ -483,7 +483,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                                 if (mounted) {
                                   setState(() => _loading = false);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Failed to post: $e')),
+                                    const SnackBar(content: Text('Failed to post. Please try again.')),
                                   );
                                 }
                               }

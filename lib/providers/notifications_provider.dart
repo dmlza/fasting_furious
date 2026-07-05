@@ -36,33 +36,39 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
 
   Future<void> fetchNotifications(String userId) async {
     state = state.copyWith(loading: true);
-    final service = ref.read(supabaseServiceProvider);
-    final data = await service.fetchNotifications(userId);
+    try {
+      final service = ref.read(supabaseServiceProvider);
+      final data = await service.fetchNotifications(userId);
 
-    final notifications = data.map((n) {
-      final fromUser = n['from_user'] as Map<String, dynamic>?;
-      return AppNotification.fromMap(n, fromUser: fromUser);
-    }).toList();
+      final notifications = data.map((n) {
+        final fromUser = n['from_user'] as Map<String, dynamic>?;
+        return AppNotification.fromMap(n, fromUser: fromUser);
+      }).toList();
 
-    final unread = notifications.where((n) => !n.read).length;
-    state = NotificationsState(notifications: notifications, unreadCount: unread, loading: false);
+      final unread = notifications.where((n) => !n.read).length;
+      state = NotificationsState(notifications: notifications, unreadCount: unread, loading: false);
+    } catch (_) {
+      state = state.copyWith(loading: false);
+    }
   }
 
   Future<void> markAllRead(String userId) async {
-    await ref.read(supabaseServiceProvider).markNotificationsRead(userId);
-    state = state.copyWith(
-      notifications: state.notifications.map((n) => AppNotification(
-        id: n.id,
-        userId: n.userId,
-        fromUserId: n.fromUserId,
-        type: n.type,
-        message: n.message,
-        read: true,
-        createdAt: n.createdAt,
-        fromUser: n.fromUser,
-      )).toList(),
-      unreadCount: 0,
-    );
+    try {
+      await ref.read(supabaseServiceProvider).markNotificationsRead(userId);
+      state = state.copyWith(
+        notifications: state.notifications.map((n) => AppNotification(
+          id: n.id,
+          userId: n.userId,
+          fromUserId: n.fromUserId,
+          type: n.type,
+          message: n.message,
+          read: true,
+          createdAt: n.createdAt,
+          fromUser: n.fromUser,
+        )).toList(),
+        unreadCount: 0,
+      );
+    } catch (_) {}
   }
 
   void addNotification(Map<String, dynamic> data) {

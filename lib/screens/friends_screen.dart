@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/friends_provider.dart';
 import '../models/models.dart';
+import '../widgets/skeleton.dart';
 
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -172,7 +173,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           // Content
           Expanded(
             child: friendsState.loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const FriendsSkeleton()
                 : RefreshIndicator(
                     onRefresh: _load,
                     child: _buildContent(friendsState),
@@ -228,7 +229,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed: $e')),
+                      const SnackBar(content: Text('Failed to send request. Please try again.')),
                     );
                   }
                 }
@@ -438,6 +439,25 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 title: const Text('Remove Friend', style: TextStyle(color: AppColors.danger)),
                 onTap: () async {
                   Navigator.of(ctx).pop();
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Remove Friend'),
+                      content: Text('Remove ${friend.name} from your friends?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                          child: const Text('Remove'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed != true) return;
                   final user = ref.read(currentUserProvider);
                   if (user == null) return;
                   try {
@@ -452,7 +472,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to remove: $e')),
+                        const SnackBar(content: Text('Failed to remove friend. Please try again.')),
                       );
                     }
                   }

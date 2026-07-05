@@ -9,11 +9,12 @@ final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
 class FeedState {
   final List<Post> posts;
   final bool loading;
+  final String? error;
 
-  FeedState({this.posts = const [], this.loading = false});
+  FeedState({this.posts = const [], this.loading = false, this.error});
 
-  FeedState copyWith({List<Post>? posts, bool? loading}) {
-    return FeedState(posts: posts ?? this.posts, loading: loading ?? this.loading);
+  FeedState copyWith({List<Post>? posts, bool? loading, String? error}) {
+    return FeedState(posts: posts ?? this.posts, loading: loading ?? this.loading, error: error);
   }
 }
 
@@ -92,7 +93,7 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
       state = FeedState(posts: posts, loading: false);
     } catch (e) {
-      state = FeedState(posts: [], loading: false);
+      state = FeedState(posts: [], loading: false, error: 'Failed to load activity. Pull to retry.');
     }
   }
 
@@ -104,11 +105,13 @@ class FeedNotifier extends StateNotifier<FeedState> {
         .where((r) => r.userId == userId && r.emoji == emoji)
         .toList();
 
-    if (existing.isNotEmpty) {
-      await service.removeReaction(userId, postId);
-    } else {
-      await service.addReaction(userId, postId, emoji);
-    }
+    try {
+      if (existing.isNotEmpty) {
+        await service.removeReaction(userId, postId);
+      } else {
+        await service.addReaction(userId, postId, emoji);
+      }
+    } catch (_) {}
   }
 }
 

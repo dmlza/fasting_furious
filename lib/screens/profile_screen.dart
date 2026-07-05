@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/friends_provider.dart';
+import '../widgets/skeleton.dart';
 import 'stats_screen.dart';
 import 'workout_history_screen.dart';
 import 'activity_detail_screen.dart';
@@ -27,6 +28,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   int _postCount = 0;
   List<Post> _myPosts = [];
   bool _loadingPosts = true;
+  bool _initialLoading = true;
 
   @override
   void initState() {
@@ -37,6 +39,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _init() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
+    await ref.read(friendsProvider.notifier).fetchAll(user.id);
+    await ref.read(habitProvider.notifier).fetchAll(user.id);
+    final results = await Future.wait([
+      ref.read(supabaseServiceProvider).getPostCount(user.id),
+      _fetchMyPosts(user.id),
+    ]);
+    if (mounted) setState(() { _postCount = results[0] as int; _initialLoading = false; });
+  }
+
+  Future<void> _refresh() async {
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    await ref.read(profileProvider.notifier).fetchProfile(user.id);
     await ref.read(friendsProvider.notifier).fetchAll(user.id);
     await ref.read(habitProvider.notifier).fetchAll(user.id);
     final results = await Future.wait([
@@ -95,8 +110,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      body: ListView(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+      body: _initialLoading
+          ? const ProfileSkeleton()
+          : RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
       children: [
         // Profile Header
         Card(
@@ -132,7 +151,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton(
-                      onPressed: () async => await ref.read(supabaseServiceProvider).signOut(),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Sign Out'),
+                            content: const Text('Are you sure you want to sign out?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                                child: const Text('Sign Out'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true) {
+                          await ref.read(supabaseServiceProvider).signOut();
+                        }
+                      },
                       style: OutlinedButton.styleFrom(foregroundColor: AppColors.danger),
                       child: const Text('Sign Out'),
                     ),
@@ -359,6 +400,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ..._myPosts.map((post) => _buildPostCard(post, theme)),
       ],
       ),
+              ),
     );
   }
 

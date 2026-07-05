@@ -23,8 +23,12 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
   Future<void> _load() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    final data = await ref.read(supabaseServiceProvider).fetchWorkoutHistory(user.id);
-    if (mounted) setState(() { _workouts = data; _loading = false; });
+    try {
+      final data = await ref.read(supabaseServiceProvider).fetchWorkoutHistory(user.id);
+      if (mounted) setState(() { _workouts = data; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   String _formatTime(int seconds) {

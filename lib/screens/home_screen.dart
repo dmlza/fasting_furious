@@ -172,14 +172,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onPressed: () async {
                         final user = ref.read(currentUserProvider);
                         if (user == null) return;
-                        final data = await ref.read(supabaseServiceProvider).startTimer(
-                          user.id,
-                          type: 'fasting',
-                          targetMinutes: preset,
-                          presetType: _selectedPreset,
-                        );
-                        ref.read(habitProvider.notifier).setActiveTimer(ActiveTimer.fromMap(data));
-                        _startTickIfNeeded();
+                        try {
+                          final data = await ref.read(supabaseServiceProvider).startTimer(
+                            user.id,
+                            type: 'fasting',
+                            targetMinutes: preset,
+                            presetType: _selectedPreset,
+                          );
+                          ref.read(habitProvider.notifier).setActiveTimer(ActiveTimer.fromMap(data));
+                          _startTickIfNeeded();
+                        } catch (_) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Failed to start fast. Please try again.')),
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.indigo,
@@ -193,23 +201,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         final service = ref.read(supabaseServiceProvider);
                         final user = ref.read(currentUserProvider);
                         if (user == null) return;
-                        final elapsed = DateTime.now().difference(timer.startedAt).inSeconds;
-                        final type = elapsed >= timer.targetMinutes * 60 ? 'fasting_complete' : 'fasting';
-                        await service.stopTimer(timer.id);
-                        if (type == 'fasting_complete') {
-                          final today = DateTime.now().toIso8601String().split('T')[0];
-                          final hours = (elapsed ~/ 3600).clamp(1, 72);
-                          await service.saveFastingHours(user.id, today, hours);
-                          await service.createPost(user.id, type: 'fasting_complete', content: 'Completed a $_selectedPreset fast!');
-                        } else {
-                          await service.createPost(user.id, type: 'fasting', content: 'Broke fast early', durationMinutes: elapsed ~/ 60);
+                        try {
+                          final elapsed = DateTime.now().difference(timer.startedAt).inSeconds;
+                          final type = elapsed >= timer.targetMinutes * 60 ? 'fasting_complete' : 'fasting';
+                          await service.stopTimer(timer.id);
+                          if (type == 'fasting_complete') {
+                            final today = DateTime.now().toIso8601String().split('T')[0];
+                            final hours = (elapsed ~/ 3600).clamp(1, 72);
+                            await service.saveFastingHours(user.id, today, hours);
+                            await service.createPost(user.id, type: 'fasting_complete', content: 'Completed a $_selectedPreset fast!');
+                          } else {
+                            await service.createPost(user.id, type: 'fasting', content: 'Broke fast early', durationMinutes: elapsed ~/ 60);
+                          }
+                          ref.read(habitProvider.notifier).setActiveTimer(null);
+                          _tickTimer?.cancel();
+                          setState(() {
+                            _timerRemaining = Duration.zero;
+                            _timerPhase = 'READY';
+                          });
+                        } catch (_) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Failed to end fast. Please try again.')),
+                            );
+                          }
                         }
-                        ref.read(habitProvider.notifier).setActiveTimer(null);
-                        _tickTimer?.cancel();
-                        setState(() {
-                          _timerRemaining = Duration.zero;
-                          _timerPhase = 'READY';
-                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.coral,

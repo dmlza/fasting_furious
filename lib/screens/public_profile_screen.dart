@@ -57,8 +57,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
         'display_name': widget.displayName,
       })).toList();
       if (mounted) setState(() { _posts = posts; _postCount = posts.length; });
-    } catch (e) {
-      // ignore
+    } catch (_) {
+      if (mounted) setState(() { _loading = false; });
     }
   }
 
@@ -71,9 +71,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
           _requestSent = status['status'] == 'pending';
         });
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (_) {}
   }
 
   Future<void> _toggleFriend() async {
@@ -118,7 +116,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('Something went wrong. Please try again.')),
         );
       }
     }

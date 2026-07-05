@@ -114,7 +114,12 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _sharing = false);
+      if (mounted) {
+        setState(() => _sharing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to share. Please try again.')),
+        );
+      }
     }
   }
 
