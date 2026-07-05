@@ -197,6 +197,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         final type = elapsed >= timer.targetMinutes * 60 ? 'fasting_complete' : 'fasting';
                         await service.stopTimer(timer.id);
                         if (type == 'fasting_complete') {
+                          final today = DateTime.now().toIso8601String().split('T')[0];
+                          final hours = (elapsed ~/ 3600).clamp(1, 72);
+                          await service.saveFastingHours(user.id, today, hours);
                           await service.createPost(user.id, type: 'fasting_complete', content: 'Completed a $_selectedPreset fast!');
                         } else {
                           await service.createPost(user.id, type: 'fasting', content: 'Broke fast early', durationMinutes: elapsed ~/ 60);

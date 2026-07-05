@@ -57,6 +57,7 @@ class HabitHistory {
   final bool noSugar;
   final bool noSmoking;
   final int exerciseMinutes;
+  final int? fastingHours;
 
   HabitHistory({
     required this.date,
@@ -64,6 +65,7 @@ class HabitHistory {
     this.noSugar = false,
     this.noSmoking = false,
     this.exerciseMinutes = 0,
+    this.fastingHours,
   });
 
   factory HabitHistory.fromMap(Map<String, dynamic> map) {
@@ -73,6 +75,7 @@ class HabitHistory {
       noSugar: map['no_sugar'] as bool? ?? false,
       noSmoking: map['no_smoking'] as bool? ?? false,
       exerciseMinutes: map['exercise_minutes'] as int? ?? 0,
+      fastingHours: map['fasting_hours'] as int?,
     );
   }
 }
@@ -244,5 +247,13 @@ class AppNotification {
       createdAt: DateTime.parse(map['created_at'] as String),
       fromUser: fromUser != null ? Profile.fromMap(fromUser) : null,
     );
+  }
+
+  String get timeAgo {
+    final diff = DateTime.now().difference(createdAt);
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 }

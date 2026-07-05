@@ -8,6 +8,7 @@ import 'services/supabase_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/habit_provider.dart';
 import 'providers/feed_provider.dart';
+import 'providers/notifications_provider.dart';
 import 'providers/theme_provider.dart';
 import 'screens/landing_screen.dart';
 import 'screens/auth_screen.dart';
@@ -132,8 +133,21 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        ref.read(notificationsProvider.notifier).fetchNotifications(user.id);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final notificationsState = ref.watch(notificationsProvider);
+    final unreadCount = notificationsState.unreadCount;
 
     return Scaffold(
       body: SafeArea(
@@ -177,8 +191,16 @@ class _MainShellState extends ConsumerState<MainShell> {
             label: '',
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite_outline, color: theme.textTheme.bodySmall?.color),
-            selectedIcon: const Icon(Icons.favorite, color: AppColors.coral),
+            icon: Badge(
+              label: unreadCount > 0 ? Text('$unreadCount', style: const TextStyle(color: Colors.white, fontSize: 10)) : null,
+              isLabelVisible: unreadCount > 0,
+              child: Icon(Icons.favorite_outline, color: theme.textTheme.bodySmall?.color),
+            ),
+            selectedIcon: Badge(
+              label: unreadCount > 0 ? Text('$unreadCount', style: const TextStyle(color: Colors.white, fontSize: 10)) : null,
+              isLabelVisible: unreadCount > 0,
+              child: const Icon(Icons.favorite, color: AppColors.coral),
+            ),
             label: 'Activity',
           ),
           NavigationDestination(

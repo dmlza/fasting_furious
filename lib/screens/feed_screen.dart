@@ -4,9 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/feed_provider.dart';
+import '../providers/notifications_provider.dart';
 import '../models/models.dart';
 import 'activity_detail_screen.dart';
 import 'public_profile_screen.dart';
+import 'notifications_screen.dart';
 import '../config/page_transitions.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
@@ -34,6 +36,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final feedState = ref.watch(feedProvider);
     final user = ref.read(currentUserProvider);
+    final notificationsState = ref.watch(notificationsProvider);
+    final unreadCount = notificationsState.unreadCount;
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +48,20 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+            icon: Badge(
+              label: unreadCount > 0 ? Text('$unreadCount', style: const TextStyle(color: Colors.white, fontSize: 10)) : null,
+              isLabelVisible: unreadCount > 0,
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          ),
+        ],
       ),
       body: feedState.loading && feedState.posts.isEmpty
           ? const Center(child: CircularProgressIndicator())

@@ -34,6 +34,10 @@ class SupabaseService {
 
   Future<void> signOut() => client.auth.signOut();
 
+  Future<void> resetPassword(String email) {
+    return client.auth.resetPasswordForEmail(email);
+  }
+
   // Profiles
   Future<Map<String, dynamic>?> fetchProfile(String userId) async {
     final data = await client
@@ -84,6 +88,14 @@ class SupabaseService {
         .gte('date', start.toIso8601String().split('T')[0])
         .order('date', ascending: true);
     return List<Map<String, dynamic>>.from(data);
+  }
+
+  Future<void> saveFastingHours(String userId, String date, int hours) {
+    return client.from('habits').upsert({
+      'user_id': userId,
+      'date': date,
+      'fasting_hours': hours,
+    }, onConflict: 'user_id,date');
   }
 
   // Timers

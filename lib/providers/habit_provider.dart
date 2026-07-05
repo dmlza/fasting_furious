@@ -65,9 +65,11 @@ class HabitNotifier extends StateNotifier<HabitState> {
   String get _today => DateTime.now().toIso8601String().split('T')[0];
 
   Future<void> _loadGridLayout() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('ff_grid_layout');
-    if (saved != null) state = state.copyWith(gridLayout: saved);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getStringList('ff_grid_layout');
+      if (saved != null) state = state.copyWith(gridLayout: saved);
+    } catch (_) {}
   }
 
   void setEditingGrid(bool editing) => state = state.copyWith(isEditingGrid: editing);
@@ -95,25 +97,31 @@ class HabitNotifier extends StateNotifier<HabitState> {
   }
 
   Future<void> fetchHabits(String userId) async {
-    final data = await ref.read(supabaseServiceProvider).fetchHabits(userId, _today);
-    if (data != null) state = state.copyWith(habits: Habit.fromMap(data));
+    try {
+      final data = await ref.read(supabaseServiceProvider).fetchHabits(userId, _today);
+      if (data != null) state = state.copyWith(habits: Habit.fromMap(data));
+    } catch (_) {}
   }
 
   Future<void> fetchHabitHistory(String userId) async {
-    final data = await ref.read(supabaseServiceProvider).fetchHabitHistory(userId, 90);
-    state = state.copyWith(
-      history: data.map((d) => HabitHistory.fromMap(d)).toList(),
-    );
+    try {
+      final data = await ref.read(supabaseServiceProvider).fetchHabitHistory(userId, 90);
+      state = state.copyWith(
+        history: data.map((d) => HabitHistory.fromMap(d)).toList(),
+      );
+    } catch (_) {}
   }
 
   Future<void> fetchActiveTimer(String userId) async {
-    final data = await ref.read(supabaseServiceProvider).fetchActiveTimer(userId);
-    state = state.copyWith(activeTimer: data != null ? ActiveTimer.fromMap(data) : null);
+    try {
+      final data = await ref.read(supabaseServiceProvider).fetchActiveTimer(userId);
+      state = state.copyWith(activeTimer: data != null ? ActiveTimer.fromMap(data) : null);
+    } catch (_) {}
   }
 
   void setActiveTimer(ActiveTimer? timer) => state = state.copyWith(activeTimer: timer);
 
-  Future<void> toggleHabit(String userId, String habit) async {
+  Future<bool> toggleHabit(String userId, String habit) async {
     final updated = Habit(
       exercise: habit == 'exercise' ? !state.habits.exercise : state.habits.exercise,
       noSugar: habit == 'no_sugar' ? !state.habits.noSugar : state.habits.noSugar,
@@ -122,26 +130,23 @@ class HabitNotifier extends StateNotifier<HabitState> {
     );
     state = state.copyWith(habits: updated);
 
-    final upsertData = {
-      'user_id': userId,
-      'date': _today,
-      habit: habit == 'no_sugar' ? updated.noSugar : habit == 'no_smoking' ? updated.noSmoking : updated.exercise,
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
+    try {
+      final upsertData = {
+        'user_id': userId,
+        'date': _today,
+        habit: habit == 'no_sugar' ? updated.noSugar : habit == 'no_smoking' ? updated.noSmoking : updated.exercise,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
+      return true;
+    } catch (_) {
+      state = state.copyWith(habits: state.habits);
+      return false;
+    }
   }
 
-  Future<void> logExerciseMinutes(String userId, int minutes) async {
+  Future<bool> logExerciseMinutes(String userId, int minutes) async {
     final total = state.habits.exerciseMinutes + minutes;
-    final upsertData = {
-      'user_id': userId,
-      'date': _today,
-      'exercise': true,
-      'exercise_minutes': total,
-      'exercise_updated_at': DateTime.now().toIso8601String(),
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-    await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
     state = state.copyWith(
       habits: Habit(
         exercise: true,
@@ -150,5 +155,28 @@ class HabitNotifier extends StateNotifier<HabitState> {
         exerciseMinutes: total,
       ),
     );
+
+    try {
+      final upsertData = {
+        'user_id': userId,
+        'date': _today,
+        'exercise': true,
+        'exercise_minutes': total,
+        'exercise_updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
+      return true;
+    } catch (_) {
+      state = state.copyWith(
+        habits: Habit(
+          exercise: state.habits.exercise,
+          noSugar: state.habits.noSugar,
+          noSmoking: state.habits.noSmoking,
+          exerciseMinutes: state.habits.exerciseMinutes - minutes,
+        ),
+      );
+      return false;
+    }
   }
 }

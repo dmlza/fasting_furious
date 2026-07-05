@@ -119,6 +119,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !_validateEmail(email).toString().contains('null')) {
+      setState(() { _error = 'Enter your email above first'; });
+      return;
+    }
+    setState(() { _loading = true; _error = ''; _success = ''; });
+    try {
+      await ref.read(supabaseServiceProvider).resetPassword(email);
+      setState(() {
+        _success = 'Password reset link sent to $email';
+        _loading = false;
+      });
+    } catch (e) {
+      String message = e.toString();
+      if (message.contains('rate_limit') || message.contains('429')) {
+        message = 'Too many attempts. Please wait before trying again.';
+      }
+      setState(() { _error = message; _loading = false; });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -194,6 +216,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                   ),
+                  if (_isLogin) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _loading ? null : _resetPassword,
+                        child: const Text('Forgot Password?', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                  ],
                   if (_error.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     Container(

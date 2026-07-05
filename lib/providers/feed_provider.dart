@@ -37,20 +37,34 @@ class FeedNotifier extends StateNotifier<FeedState> {
     final service = ref.read(supabaseServiceProvider);
 
     try {
-      // Fetch all posts (simple approach — no friendships dependency)
+      final sent = await service.fetchFriendships(userId, 'accepted', sent: true);
+      final received = await service.fetchFriendships(userId, 'accepted', sent: false);
+
+      final friendIds = <String>[];
+      for (final f in sent) {
+        final receiverId = f['receiver_id'] as String?;
+        if (receiverId != null) friendIds.add(receiverId);
+      }
+      for (final f in received) {
+        final senderId = f['sender_id'] as String?;
+        if (senderId != null) friendIds.add(senderId);
+      }
+
+      final authorIds = [userId, ...friendIds];
+
       final postsData = await service.client
           .from('posts')
           .select('*')
+          .inFilter('user_id', authorIds)
           .order('created_at', ascending: false)
           .limit(50);
 
-      // Fetch all profiles for the posts
-      final userIds = (postsData as List).map((p) => p['user_id'] as String).toSet().toList();
-      final profilesData = userIds.isNotEmpty
-          ? await service.client.from('profiles').select('id, username, display_name').inFilter('id', userIds)
+      final profileUserIds = (postsData as List).map((p) => p['user_id'] as String).toSet().toList();
+      final profilesData = profileUserIds.isNotEmpty
+          ? await service.client.from('profiles').select('id, username, display_name').inFilter('id', profileUserIds)
           : [];
       final profilesMap = <String, Map<String, dynamic>>{};
-      for (final p in profilesData as List) {
+      for (final p in profilesData) {
         profilesMap[p['id'] as String] = p as Map<String, dynamic>;
       }
 
