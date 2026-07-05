@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:animate_do/animate_do.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 
 class LandingScreen extends StatelessWidget {
@@ -18,53 +20,70 @@ class LandingScreen extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
-                    // Logo
-                    Text(
-                      'Fasting Furious',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: theme.colorScheme.primary,
-                        letterSpacing: -1,
+                    const SizedBox(height: 48),
+                    FadeInDown(
+                      duration: const Duration(milliseconds: 800),
+                      child: Text(
+                        'Fasting Furious',
+                        style: GoogleFonts.poppins(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.purple,
+                          letterSpacing: -1,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'train hard. fast harder.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.textTheme.bodySmall?.color,
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 800),
+                      child: Text(
+                        'train hard. fast harder.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          color: AppColors.grey,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 40),
-
-                    // Phone mockup
-                    _PhoneMockup(isDark: isDark),
-
-                    const SizedBox(height: 40),
-
-                    // Feature bullets
+                    const SizedBox(height: 44),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 400),
+                      duration: const Duration(milliseconds: 800),
+                      child: _PhoneMockup(isDark: isDark),
+                    ),
+                    const SizedBox(height: 44),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
                         children: [
-                          _FeatureRow(
-                            icon: Icons.timer_outlined,
-                            text: 'Track fasting & workouts',
-                            isDark: isDark,
+                          FadeInLeft(
+                            delay: const Duration(milliseconds: 600),
+                            duration: const Duration(milliseconds: 600),
+                            child: _FeatureRow(
+                              icon: Icons.timer_outlined,
+                              text: 'Track fasting & workouts',
+                              isDark: isDark,
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          _FeatureRow(
-                            icon: Icons.people_outline,
-                            text: 'Challenge your friends',
-                            isDark: isDark,
+                          const SizedBox(height: 18),
+                          FadeInLeft(
+                            delay: const Duration(milliseconds: 750),
+                            duration: const Duration(milliseconds: 600),
+                            child: _FeatureRow(
+                              icon: Icons.people_outline,
+                              text: 'Challenge your friends',
+                              isDark: isDark,
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          _FeatureRow(
-                            icon: Icons.local_fire_department_outlined,
-                            text: 'Build streaks & earn ranks',
-                            isDark: isDark,
+                          const SizedBox(height: 18),
+                          FadeInLeft(
+                            delay: const Duration(milliseconds: 900),
+                            duration: const Duration(milliseconds: 600),
+                            child: _FeatureRow(
+                              icon: Icons.local_fire_department_outlined,
+                              text: 'Build streaks & earn ranks',
+                              isDark: isDark,
+                            ),
                           ),
                         ],
                       ),
@@ -74,50 +93,38 @@ class LandingScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Bottom CTA
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: onGetStarted,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.indigo,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+            FadeInUp(
+              delay: const Duration(milliseconds: 1000),
+              duration: const Duration(milliseconds: 600),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: onGetStarted,
+                        child: const Text(
+                          'Create Account',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      child: const Text(
-                        'Create Account',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton(
-                      onPressed: onGetStarted,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.indigo,
-                        side: const BorderSide(color: AppColors.indigo),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: onGetStarted,
+                        child: const Text(
+                          'Log In',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                       ),
-                      child: const Text(
-                        'Log In',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -134,28 +141,27 @@ class _PhoneMockup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
-      height: 400,
+      width: 240,
+      height: 440,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(32),
+        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF8F8FA),
+        borderRadius: BorderRadius.circular(36),
         border: Border.all(
-          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.08),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 40,
+            color: AppColors.purple.withOpacity(0.08),
+            blurRadius: 50,
             offset: const Offset(0, 20),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(34),
         child: Column(
           children: [
-            // Status bar
             Container(
               height: 44,
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -175,66 +181,58 @@ class _PhoneMockup extends StatelessWidget {
                 ],
               ),
             ),
-
-            // App bar mock
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Fasting Furious', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black)),
+                  Text('Fasting Furious', style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black)),
                   Icon(Icons.notifications_outlined, color: isDark ? Colors.white : Colors.black),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-
-            // Timer card mock
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.indigo.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: AppGradients.purpleGradient,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
-                    Text('16:8', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.indigo)),
+                    Text('16:8', style: GoogleFonts.poppins(fontSize: 36, fontWeight: FontWeight.w900, color: Colors.white)),
                     const SizedBox(height: 4),
-                    Text('FASTING', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.indigo, letterSpacing: 2)),
+                    Text('FASTING', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white70, letterSpacing: 2)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // Activity rings mock
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _MockRing(color: AppColors.indigo, size: 50),
+                _MockRing(color: AppColors.purple, size: 50),
                 const SizedBox(width: 8),
-                _MockRing(color: AppColors.emerald, size: 40),
+                _MockRing(color: AppColors.green, size: 40),
                 const SizedBox(width: 8),
-                _MockRing(color: AppColors.amber, size: 30),
+                _MockRing(color: AppColors.purple, size: 30),
               ],
             ),
             const SizedBox(height: 16),
-
-            // Feed preview mock
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  CircleAvatar(radius: 12, backgroundColor: AppColors.coral),
+                  CircleAvatar(radius: 14, backgroundColor: AppColors.green),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Alex completed a fast', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black)),
-                        Text('2 hours ago', style: TextStyle(fontSize: 9, color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.5))),
+                        Text('Alex completed a fast', style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black)),
+                        Text('2 hours ago', style: GoogleFonts.poppins(fontSize: 9, color: (isDark ? Colors.white : Colors.black).withOpacity(0.5))),
                       ],
                     ),
                   ),
@@ -286,16 +284,16 @@ class _FeatureRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: AppColors.indigo.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.purple.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, color: AppColors.indigo, size: 20),
+          child: Icon(icon, color: AppColors.purple, size: 22),
         ),
         const SizedBox(width: 16),
-        Text(text, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black)),
+        Text(text, style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black)),
       ],
     );
   }

@@ -17,62 +17,62 @@ class HealthMilestone {
   });
 }
 
-const List<HealthMilestone> healthMilestones = [
+List<HealthMilestone> healthMilestones = [
   HealthMilestone(
     icon: '\u2764\uFE0F',
     title: 'Heart Rate Normalizes',
     description: 'Your heart rate drops to normal levels. Blood pressure begins to stabilize.',
     timeFromQuit: Duration(minutes: 20),
-    color: AppColors.coral,
+    color: AppColors.green,
   ),
   HealthMilestone(
     icon: '\u{1FAC0}',
     title: 'Carbon Monoxide Clears',
     description: 'Carbon monoxide levels in blood drop to normal. Oxygen levels increase.',
     timeFromQuit: Duration(hours: 24),
-    color: AppColors.indigo,
+    color: AppColors.purple,
   ),
   HealthMilestone(
     icon: '\u{1F442}',
     title: 'Taste & Smell Return',
     description: 'Nerve endings begin to regenerate. Food tastes better, smells are stronger.',
     timeFromQuit: Duration(hours: 48),
-    color: AppColors.emerald,
+    color: AppColors.green,
   ),
   HealthMilestone(
     icon: '\u{1F331}',
     title: 'Lung Function Improves',
     description: 'Bronchial tubes relax. Energy increases. Walking becomes easier.',
     timeFromQuit: Duration(days: 3),
-    color: AppColors.amber,
+    color: AppColors.purple,
   ),
   HealthMilestone(
     icon: '\u{1F4AA}',
     title: 'Circulation Boost',
     description: 'Blood circulation improves significantly. Physical activities feel easier.',
     timeFromQuit: Duration(days: 7),
-    color: AppColors.indigo,
+    color: AppColors.purple,
   ),
   HealthMilestone(
     icon: '\u{1F33F}',
     title: 'Lung Cilia Regrow',
     description: 'Tiny hair-like structures in lungs regrow. Breathing becomes easier.',
     timeFromQuit: Duration(days: 14),
-    color: AppColors.emerald,
+    color: AppColors.green,
   ),
   HealthMilestone(
     icon: '\u2728',
     title: 'Skin Health Improves',
     description: 'Skin tone improves. Premature aging slows down. Teeth whitening begins.',
     timeFromQuit: Duration(days: 30),
-    color: AppColors.amber,
+    color: AppColors.purple,
   ),
   HealthMilestone(
     icon: '\u{1F3AF}',
     title: 'Heart Disease Risk Halved',
     description: 'Risk of heart disease drops to half that of a smoker. Major milestone!',
     timeFromQuit: Duration(days: 365),
-    color: AppColors.coral,
+    color: AppColors.green,
   ),
 ];
 
@@ -106,7 +106,7 @@ class HealthRecoveryTimeline extends StatelessWidget {
           children: [
             Text(
               '${achieved.length}/${healthMilestones.length}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.emerald),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.green),
             ),
             const SizedBox(width: 8),
             Text(
@@ -125,7 +125,7 @@ class HealthRecoveryTimeline extends StatelessWidget {
           LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
             backgroundColor: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-            valueColor: const AlwaysStoppedAnimation(AppColors.emerald),
+            valueColor: AlwaysStoppedAnimation(AppColors.green),
             borderRadius: BorderRadius.circular(2),
             minHeight: 4,
           ),
@@ -135,9 +135,9 @@ class HealthRecoveryTimeline extends StatelessWidget {
             style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color),
           ),
         ] else ...[
-          const Text(
+          Text(
             'All milestones achieved!',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.emerald),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.green),
           ),
         ],
       ],
@@ -226,12 +226,12 @@ class HealthRecoveryTimeline extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.emerald.withValues(alpha: 0.1),
+                      color: AppColors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
+                    child: Text(
                       '\u2713',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.emerald),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.green),
                     ),
                   )
                 else if (remaining.isNegative)

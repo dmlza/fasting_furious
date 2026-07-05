@@ -42,8 +42,8 @@ class FastingTimerRing extends StatelessWidget {
                     ? Colors.white.withValues(alpha: 0.06)
                     : Colors.black.withValues(alpha: 0.06),
                 gradientColors: isActive
-                    ? [AppColors.indigo, AppColors.indigo.withValues(alpha: 0.6)]
-                    : [AppColors.indigo.withValues(alpha: 0.3), AppColors.indigo.withValues(alpha: 0.1)],
+                    ? [AppColors.purple, AppColors.purple.withValues(alpha: 0.6)]
+                    : [AppColors.purple.withValues(alpha: 0.3), AppColors.purple.withValues(alpha: 0.1)],
                 strokeWidth: 12,
               ),
             ),
@@ -74,15 +74,15 @@ class FastingTimerRing extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.indigo.withValues(alpha: 0.1),
+                    color: AppColors.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     preset!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.indigo,
+                      color: AppColors.purple,
                       letterSpacing: 1,
                     ),
                   ),
@@ -104,7 +104,7 @@ class FastingTimerRing extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: isActive ? AppColors.indigo : theme.textTheme.bodySmall?.color,
+                  color: isActive ? AppColors.purple : theme.textTheme.bodySmall?.color,
                   letterSpacing: 3,
                 ),
               ),
@@ -137,13 +137,13 @@ class FastingTimerRing extends StatelessWidget {
           height: 24,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isReached ? AppColors.indigo : theme.scaffoldBackgroundColor,
+            color: isReached ? AppColors.purple : theme.scaffoldBackgroundColor,
             border: Border.all(
-              color: isReached ? AppColors.indigo : theme.dividerColor,
+              color: isReached ? AppColors.purple : theme.dividerColor,
               width: 2,
             ),
             boxShadow: isReached
-                ? [BoxShadow(color: AppColors.indigo.withValues(alpha: 0.3), blurRadius: 8)]
+                ? [BoxShadow(color: AppColors.purple.withValues(alpha: 0.3), blurRadius: 8)]
                 : null,
           ),
           child: Center(

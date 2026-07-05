@@ -16,6 +16,8 @@ import 'screens/home_screen.dart';
 import 'screens/feed_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/friends_screen.dart';
+import 'widgets/floating_pill_nav_bar.dart';
+import 'widgets/app_drawer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,17 +120,17 @@ class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
 
   final _screens = const [
-    HomeScreen(),     // 0
-    FriendsScreen(),  // 1
-    FeedScreen(),     // 3
-    ProfileScreen(),  // 4
+    HomeScreen(),
+    FriendsScreen(),
+    FeedScreen(),
+    ProfileScreen(),
   ];
 
   int _getScreenIndex(int navIndex) {
-    if (navIndex == 0) return 0;      // Home
-    if (navIndex == 1) return 1;      // Search (Friends)
-    if (navIndex == 3) return 2;      // Activity (Feed)
-    if (navIndex == 4) return 3;      // Profile
+    if (navIndex == 0) return 0;
+    if (navIndex == 1) return 1;
+    if (navIndex == 3) return 2;
+    if (navIndex == 4) return 3;
     return 0;
   }
 
@@ -145,17 +147,19 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final notificationsState = ref.watch(notificationsProvider);
     final unreadCount = notificationsState.unreadCount;
 
     return Scaffold(
+      extendBody: true,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: _screens[_getScreenIndex(_currentIndex)],
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: FloatingPillNavBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (i) {
+        unreadCount: unreadCount,
+        onItemTapped: (i) {
           if (i == 2) {
             _showCreatePostSheet();
           } else {
@@ -170,45 +174,6 @@ class _MainShellState extends ConsumerState<MainShell> {
             }
           }
         },
-        height: 70,
-        elevation: 0,
-        backgroundColor: theme.scaffoldBackgroundColor,
-        indicatorColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined, color: theme.textTheme.bodySmall?.color),
-            selectedIcon: const Icon(Icons.home, color: AppColors.indigo),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search, color: theme.textTheme.bodySmall?.color),
-            selectedIcon: const Icon(Icons.search, color: AppColors.indigo),
-            label: 'Search',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.add_box_outlined),
-            selectedIcon: Icon(Icons.add_box),
-            label: '',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              label: unreadCount > 0 ? Text('$unreadCount', style: const TextStyle(color: Colors.white, fontSize: 10)) : null,
-              isLabelVisible: unreadCount > 0,
-              child: Icon(Icons.favorite_outline, color: theme.textTheme.bodySmall?.color),
-            ),
-            selectedIcon: Badge(
-              label: unreadCount > 0 ? Text('$unreadCount', style: const TextStyle(color: Colors.white, fontSize: 10)) : null,
-              isLabelVisible: unreadCount > 0,
-              child: const Icon(Icons.favorite, color: AppColors.coral),
-            ),
-            label: 'Activity',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline, color: theme.textTheme.bodySmall?.color),
-            selectedIcon: const Icon(Icons.person, color: AppColors.indigo),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
@@ -217,6 +182,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => const _CreatePostSheet(),
     );
   }
@@ -308,11 +274,15 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
     final smokingStreak = habitState.getStreak('no_smoking');
     final sugarStreak = habitState.getStreak('no_sugar');
 
-    return Padding(
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       padding: EdgeInsets.only(
         left: 24,
         right: 24,
-        top: 24,
+        top: 12,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: SingleChildScrollView(
@@ -338,8 +308,6 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
               style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
             ),
             const SizedBox(height: 16),
-
-            // Stat chips
             Text('Your Stats', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
             const SizedBox(height: 8),
             Wrap(
@@ -351,7 +319,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                     emoji: '\u{1F3C3}',
                     label: '${habitState.habits.exerciseMinutes}min exercise',
                     isSelected: _shareExercise,
-                    color: AppColors.emerald,
+                    color: AppColors.green,
                     onTap: () => setState(() => _shareExercise = !_shareExercise),
                   ),
                 if (smokingStreak > 0)
@@ -359,7 +327,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                     emoji: '\u{1F6AB}',
                     label: '$smokingStreak day${smokingStreak != 1 ? 's' : ''} smoke-free',
                     isSelected: _shareSmoking,
-                    color: AppColors.coral,
+                    color: AppColors.green,
                     onTap: () => setState(() => _shareSmoking = !_shareSmoking),
                   ),
                 if (sugarStreak > 0)
@@ -367,21 +335,19 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                     emoji: '\u{1F525}',
                     label: '$sugarStreak day${sugarStreak != 1 ? 's' : ''} sugar-free',
                     isSelected: _shareSugar,
-                    color: AppColors.amber,
+                    color: AppColors.purple,
                     onTap: () => setState(() => _shareSugar = !_shareSugar),
                   ),
                 _StatChip(
                   emoji: '\u{1F37D}\u{FE0F}',
                   label: 'Fasting',
                   isSelected: _shareFasting,
-                  color: AppColors.indigo,
+                  color: AppColors.purple,
                   onTap: () => setState(() => _shareFasting = !_shareFasting),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-
-            // Type selector
             Wrap(
               spacing: 8,
               children: [
@@ -397,13 +363,11 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
               decoration: const InputDecoration(hintText: "Add a message (optional)"),
             ),
             const SizedBox(height: 12),
-
-            // Image preview + picker
             if (_selectedImage != null)
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     child: Image.file(_selectedImage!, height: 160, width: double.infinity, fit: BoxFit.cover),
                   ),
                   Positioned(
@@ -420,7 +384,7 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
                   if (_uploadingImage)
                     Positioned.fill(
                       child: Container(
-                        decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: Colors.black38, borderRadius: BorderRadius.circular(16)),
                         child: const Center(child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
                       ),
                     ),
@@ -447,47 +411,47 @@ class _CreatePostSheetState extends ConsumerState<_CreatePostSheet> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                  onPressed: user == null
-                      ? null
-                      : _loading
-                          ? null
-                          : () async {
-                              final content = _buildContent();
-                              if (content.trim().isEmpty) {
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Select a stat or type a message first')),
-                                  );
-                                }
-                                return;
+                onPressed: user == null
+                    ? null
+                    : _loading
+                        ? null
+                        : () async {
+                            final content = _buildContent();
+                            if (content.trim().isEmpty) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Select a stat or type a message first')),
+                                );
                               }
-                      setState(() => _loading = true);
-                      try {
-                        String? imageUrl;
-                        if (_selectedImage != null) {
-                          imageUrl = await _uploadImage(user.id);
-                        }
-                        await ref.read(supabaseServiceProvider).createPost(
-                          user.id,
-                          type: _selectedType,
-                          content: content.trim(),
-                          imageUrl: imageUrl,
-                        );
-                                if (mounted) {
-                                  Navigator.of(context).pop();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Posted!')),
-                                  );
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  setState(() => _loading = false);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Failed to post. Please try again.')),
-                                  );
-                                }
+                              return;
+                            }
+                    setState(() => _loading = true);
+                    try {
+                      String? imageUrl;
+                      if (_selectedImage != null) {
+                        imageUrl = await _uploadImage(user.id);
+                      }
+                      await ref.read(supabaseServiceProvider).createPost(
+                        user.id,
+                        type: _selectedType,
+                        content: content.trim(),
+                        imageUrl: imageUrl,
+                      );
+                              if (mounted) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Posted!')),
+                                );
                               }
-                            },
+                            } catch (e) {
+                              if (mounted) {
+                                setState(() => _loading = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Failed to post. Please try again.')),
+                                );
+                              }
+                            }
+                          },
                 child: _loading
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                     : const Text('Post', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -576,13 +540,13 @@ class _TypeChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.indigo.withValues(alpha: 0.1) : Colors.transparent,
+          color: isSelected ? AppColors.purple.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.indigo : Theme.of(context).dividerColor,
+            color: isSelected ? AppColors.purple : Theme.of(context).dividerColor,
           ),
         ),
-        child: Text('$emoji $label', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? AppColors.indigo : null)),
+        child: Text('$emoji $label', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? AppColors.purple : null)),
       ),
     );
   }
@@ -607,7 +571,7 @@ class _ImagePickerButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

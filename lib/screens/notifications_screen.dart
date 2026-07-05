@@ -99,7 +99,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: AppColors.indigo,
+                color: AppColors.purple,
                 shape: BoxShape.circle,
               ),
             )
@@ -141,11 +141,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     switch (type) {
       case 'friend_request':
       case 'friend_accept':
-        return AppColors.indigo;
+        return AppColors.purple;
       case 'kudos':
-        return AppColors.coral;
+        return AppColors.green;
       case 'comment':
-        return AppColors.emerald;
+        return AppColors.green;
       default:
         return Colors.grey;
     }

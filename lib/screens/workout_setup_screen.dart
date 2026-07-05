@@ -263,7 +263,7 @@ class _WorkoutSetupScreenState extends State<WorkoutSetupScreen> {
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.emerald,
+                  backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: theme.dividerColor.withValues(alpha: 0.3),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

@@ -46,11 +46,11 @@ extension WorkoutCategoryExtension on WorkoutCategory {
   Color get color {
     switch (this) {
       case WorkoutCategory.warmUp:
-        return AppColors.amber;
+        return AppColors.purple;
       case WorkoutCategory.mainExercise:
-        return AppColors.emerald;
+        return AppColors.green;
       case WorkoutCategory.coolDown:
-        return AppColors.indigo;
+        return AppColors.purple;
     }
   }
 }

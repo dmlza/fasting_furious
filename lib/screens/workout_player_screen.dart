@@ -221,7 +221,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               child: ElevatedButton(
                 onPressed: _skipBreak,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.emerald,
+                  backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -423,7 +423,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: _secondsRemaining <= 10 ? AppColors.coral : color,
+                  color: _secondsRemaining <= 10 ? AppColors.green : color,
                 ),
               ),
             ],
@@ -435,7 +435,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: _isPaused ? AppColors.amber : theme.textTheme.bodySmall?.color,
+            color: _isPaused ? AppColors.purple : theme.textTheme.bodySmall?.color,
           ),
         ),
       ],
@@ -470,7 +470,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           style: TextStyle(
             fontSize: 64,
             fontWeight: FontWeight.w800,
-            color: _repsCompleted >= exercise.defaultReps! ? AppColors.emerald : color,
+            color: _repsCompleted >= exercise.defaultReps! ? AppColors.green : color,
           ),
         ),
         Text(
@@ -481,7 +481,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         if (_isPaused)
           Text(
             'PAUSED',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.amber),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.purple),
           ),
       ],
     );
@@ -579,7 +579,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           _buildControlButton(
             icon: _isPaused ? Icons.play_arrow : Icons.pause,
             label: _isPaused ? 'Resume' : 'Pause',
-            color: AppColors.amber,
+            color: AppColors.purple,
             onTap: _togglePause,
           ),
           // Rep increment (reps-based) or Skip (time-based)
@@ -587,7 +587,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             _buildControlButton(
               icon: Icons.add,
               label: '+1 Rep',
-              color: AppColors.emerald,
+              color: AppColors.green,
               onTap: () {
                 HapticFeedback.lightImpact();
                 setState(() => _repsCompleted++);
@@ -602,7 +602,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             _buildControlButton(
               icon: Icons.skip_next,
               label: 'Skip',
-              color: AppColors.indigo,
+              color: AppColors.purple,
               onTap: _skipExercise,
               large: true,
             ),
@@ -665,7 +665,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },
-            child: const Text('End', style: TextStyle(color: AppColors.coral)),
+            child: const Text('End', style: TextStyle(color: AppColors.green)),
           ),
         ],
       ),

@@ -61,21 +61,21 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         _SummaryCard(
           value: '$completedFasts',
           label: 'Fasts',
-          color: AppColors.indigo,
+          color: AppColors.purple,
           icon: Icons.timer_outlined,
         ),
         const SizedBox(width: 12),
         _SummaryCard(
           value: '${avgHours}h',
           label: 'Avg Duration',
-          color: AppColors.emerald,
+          color: AppColors.green,
           icon: Icons.access_time,
         ),
         const SizedBox(width: 12),
         _SummaryCard(
           value: '$bestStreak',
           label: 'Best Streak',
-          color: AppColors.amber,
+          color: AppColors.purple,
           icon: Icons.local_fire_department_outlined,
         ),
       ],
@@ -106,9 +106,9 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _LegendDot(color: AppColors.indigo, label: 'Fasting Hours'),
+                _LegendDot(color: AppColors.purple, label: 'Fasting Hours'),
                 const SizedBox(width: 20),
-                _LegendDot(color: AppColors.amber, label: 'Goal (16h)'),
+                _LegendDot(color: AppColors.purple, label: 'Goal (16h)'),
               ],
             ),
           ],
@@ -133,7 +133,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.indigo : Colors.transparent,
+                color: isSelected ? AppColors.purple : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -161,7 +161,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         maxY: maxY < 24 ? 24 : maxY + 2,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
-            getTooltipColor: (_) => AppColors.indigo,
+            getTooltipColor: (_) => AppColors.purple,
             getTooltipItem: (group, groupIdx, rod, rodIdx) {
               return BarTooltipItem(
                 '${rod.toY.toStringAsFixed(1)}h',
@@ -225,11 +225,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 toY: bar.y,
                 width: 20,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-                color: isGoalMet ? AppColors.indigo : AppColors.indigo.withValues(alpha: 0.4),
+                color: isGoalMet ? AppColors.purple : AppColors.purple.withValues(alpha: 0.4),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 16,
-                  color: AppColors.amber.withValues(alpha: 0.1),
+                  color: AppColors.purple.withValues(alpha: 0.1),
                 ),
               ),
             ],
@@ -268,21 +268,21 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               label: 'No Sugar',
               days: state.getStreak('no_sugar'),
               emoji: '\u{1F525}',
-              color: AppColors.amber,
+              color: AppColors.purple,
             ),
             const SizedBox(height: 12),
             _StreakRow(
               label: 'No Smoking',
               days: state.getStreak('no_smoking'),
               emoji: '\u{1F6AB}',
-              color: AppColors.coral,
+              color: AppColors.green,
             ),
             const SizedBox(height: 12),
             _StreakRow(
               label: 'Exercise',
               days: state.getStreak('exercise'),
               emoji: '\u{1F3C3}',
-              color: AppColors.emerald,
+              color: AppColors.green,
             ),
           ],
         ),

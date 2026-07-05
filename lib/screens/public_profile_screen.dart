@@ -150,8 +150,8 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 40,
-                          backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-                          child: Text(_initial, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.indigo)),
+                          backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+                          child: Text(_initial, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: AppColors.purple)),
                         ),
                         const SizedBox(height: 12),
                         Text(_name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
@@ -179,18 +179,18 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                               icon: Icon(
                                 _isFriend ? Icons.check : _requestSent ? Icons.hourglass_empty : Icons.person_add,
                                 size: 16,
-                                color: _isFriend ? AppColors.emerald : AppColors.indigo,
+                                color: _isFriend ? AppColors.green : AppColors.purple,
                               ),
                               label: Text(
                                 _isFriend ? 'Friends' : _requestSent ? 'Requested' : 'Add Friend',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: _isFriend ? AppColors.emerald : AppColors.indigo,
+                                  color: _isFriend ? AppColors.green : AppColors.purple,
                                 ),
                               ),
                               style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: _isFriend ? AppColors.emerald : AppColors.indigo),
+                                side: BorderSide(color: _isFriend ? AppColors.green : AppColors.purple),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
                             ),
@@ -315,14 +315,14 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.indigo.withValues(alpha: 0.08),
+        color: AppColors.purple.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
       ),
       child: value.isEmpty
           ? const SizedBox.shrink()
           : Text(
               '$value $label',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.indigo),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.purple),
             ),
     );
   }

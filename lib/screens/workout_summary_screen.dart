@@ -175,7 +175,7 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.emerald,
+                  color: AppColors.green,
                 ),
               ),
             ],
@@ -189,9 +189,9 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.emerald.withValues(alpha: 0.06),
+        color: AppColors.green.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.emerald.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.green.withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -200,7 +200,7 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
             icon: Icons.timer_outlined,
             value: _formatTime(widget.elapsedSeconds),
             label: 'Duration',
-            color: AppColors.indigo,
+            color: AppColors.purple,
             theme: theme,
           ),
           Container(width: 1, height: 40, color: theme.dividerColor),
@@ -208,7 +208,7 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
             icon: Icons.fitness_center,
             value: '${widget.exercises.length}',
             label: 'Exercises',
-            color: AppColors.emerald,
+            color: AppColors.green,
             theme: theme,
           ),
           Container(width: 1, height: 40, color: theme.dividerColor),
@@ -216,7 +216,7 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
             icon: Icons.repeat,
             value: '$_totalReps',
             label: 'Total Reps',
-            color: AppColors.amber,
+            color: AppColors.purple,
             theme: theme,
           ),
         ],
@@ -319,10 +319,10 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
             children: muscles.map((m) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.indigo.withValues(alpha: 0.08),
+                color: AppColors.purple.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(m, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.indigo)),
+              child: Text(m, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.purple)),
             )).toList(),
           ),
         ],
@@ -336,18 +336,18 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
         width: double.infinity,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.emerald.withValues(alpha: 0.08),
+          color: AppColors.green.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.emerald.withValues(alpha: 0.2)),
+          border: Border.all(color: AppColors.green.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.check_circle, color: AppColors.emerald, size: 18),
+            Icon(Icons.check_circle, color: AppColors.green, size: 18),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Shared to Activity Feed',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.emerald),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.green),
             ),
           ],
         ),
@@ -371,9 +371,9 @@ class _WorkoutSummaryScreenState extends ConsumerState<WorkoutSummaryScreen>
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.indigo,
+          backgroundColor: AppColors.purple,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.indigo.withValues(alpha: 0.6),
+          disabledBackgroundColor: AppColors.purple.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),

@@ -87,9 +87,9 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.emerald.withValues(alpha: 0.06),
+                        color: AppColors.green.withValues(alpha: 0.06),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.emerald.withValues(alpha: 0.15)),
+                        border: Border.all(color: AppColors.green.withValues(alpha: 0.15)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +99,7 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.emerald.withValues(alpha: 0.15),
+                                  color: AppColors.green.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Text('\u{1F3C3}', style: TextStyle(fontSize: 18)),
@@ -125,11 +125,11 @@ class _WorkoutHistoryScreenState extends ConsumerState<WorkoutHistoryScreen> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              _buildMiniStat(Icons.timer_outlined, _formatTime(elapsed), AppColors.indigo),
+                              _buildMiniStat(Icons.timer_outlined, _formatTime(elapsed), AppColors.purple),
                               const SizedBox(width: 16),
-                              _buildMiniStat(Icons.fitness_center, '$exercises ex', AppColors.emerald),
+                              _buildMiniStat(Icons.fitness_center, '$exercises ex', AppColors.green),
                               const SizedBox(width: 16),
-                              _buildMiniStat(Icons.repeat, '$reps reps', AppColors.amber),
+                              _buildMiniStat(Icons.repeat, '$reps reps', AppColors.purple),
                             ],
                           ),
                           if (muscles.isNotEmpty) ...[

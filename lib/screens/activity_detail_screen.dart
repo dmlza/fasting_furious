@@ -18,6 +18,7 @@ class ActivityDetailScreen extends ConsumerStatefulWidget {
 
 class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
   final _commentController = TextEditingController();
+  final _scrollController = ScrollController();
   List<Map<String, dynamic>> _comments = [];
   bool _loadingComments = true;
   bool _posting = false;
@@ -31,6 +32,7 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
   @override
   void dispose() {
     _commentController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -78,7 +80,6 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final user = ref.read(currentUserProvider);
     final post = widget.post;
     final config = _getConfig(post.type);
@@ -100,88 +101,97 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Activity header
-                  GestureDetector(
-                    onTap: post.userId != ref.read(currentUserProvider)?.id ? () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => PublicProfileScreen(
-                          userId: post.userId,
-                          username: post.profile?.username,
-                          displayName: post.profile?.displayName,
-                        )),
-                      );
-                    } : null,
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: _avatarColor(name),
-                          child: Text(initial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                              Text('${config.emoji} ${config.label} \u00B7 ${post.timeAgo}',
-                                style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Activity content
-                  Text(post.content ?? '', style: const TextStyle(fontSize: 16, height: 1.5)),
-                  if (post.imageUrl != null) ...[
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(post.imageUrl!, width: double.infinity, fit: BoxFit.cover),
-                    ),
-                  ],
-
-                  // Activity stats
-                  if (post.durationMinutes != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.indigo.withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _StatItem(label: 'Duration', value: post.durationFormatted),
-                          _StatItem(label: 'Type', value: config.label),
-                          _StatItem(label: 'Kudos', value: '${post.hypeCount}'),
-                        ],
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 20),
-
-                  // Kudos + Reactions
+                  // Post card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border(
+                        left: BorderSide(
+                          color: _accentColor(post.type),
+                          width: 4,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          offset: const Offset(0, 2),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Kudos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
-                        const SizedBox(height: 8),
+                        // Header
+                        GestureDetector(
+                          onTap: post.userId != user?.id ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => PublicProfileScreen(
+                                userId: post.userId,
+                                username: post.profile?.username,
+                                displayName: post.profile?.displayName,
+                              )),
+                            );
+                          } : null,
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: _accentColor(post.type).withValues(alpha: 0.1),
+                                child: Text(initial, style: TextStyle(color: _accentColor(post.type), fontWeight: FontWeight.w700, fontSize: 13)),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                                    Text('${config.emoji} ${config.label}',
+                                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                              Text(post.timeAgo, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Content
+                        Text(post.content ?? '', style: const TextStyle(fontSize: 15, height: 1.5)),
+                        if (post.imageUrl != null) ...[
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(post.imageUrl!, width: double.infinity, fit: BoxFit.cover),
+                          ),
+                        ],
+                        // Stats
+                        if (post.durationMinutes != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _StatItem(label: 'Duration', value: post.durationFormatted),
+                                _StatItem(label: 'Type', value: config.label),
+                                _StatItem(label: 'Kudos', value: '${post.hypeCount}'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        // Reactions
                         Wrap(
                           spacing: 6,
                           children: _emojis.map((emoji) {
@@ -189,13 +199,13 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
                             final isActive = user != null && post.reactions.any((r) => r.userId == user.id && r.emoji == emoji);
                             return ActionChip(
                               label: Text('$emoji ${count > 0 ? count : ''}',
-                                style: TextStyle(fontSize: 13, color: isActive ? AppColors.indigo : null)),
+                                style: TextStyle(fontSize: 12, color: isActive ? AppColors.purple : AppColors.textSecondary)),
                               onPressed: user != null
                                   ? () => ref.read(feedProvider.notifier).toggleReaction(user.id, post.id, emoji).then((_) => setState(() {}))
                                   : null,
                               backgroundColor: isActive
-                                  ? AppColors.indigo.withValues(alpha: 0.1)
-                                  : theme.colorScheme.surface,
+                                  ? AppColors.purple.withValues(alpha: 0.1)
+                                  : AppColors.surface,
                               side: BorderSide.none,
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -210,67 +220,132 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
             ),
           ),
 
-          // Comments section
+          // Comments section (bottom sheet style)
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.scaffoldBackgroundColor,
-              border: Border(top: BorderSide(color: theme.dividerColor)),
+            decoration: const BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  offset: Offset(0, -2),
+                  blurRadius: 8,
+                ),
+              ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Comments (${_comments.length})', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
-                const SizedBox(height: 12),
-
+                // Drag handle
+                Padding(
+                  padding: const EdgeInsets.only(top: 10, bottom: 6),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.textTertiary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // Comments header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Comments',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_comments.length}',
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                // Comments list
                 if (_loadingComments)
-                  const Center(child: CircularProgressIndicator())
+                  const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
                 else if (_comments.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Center(
-                      child: Text('No comments yet. Be the first!', style: TextStyle(color: theme.textTheme.bodySmall?.color)),
+                      child: Text(
+                        'No comments yet',
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      ),
                     ),
                   )
                 else
-                  ..._comments.map((c) => _buildComment(c)),
-
-                const SizedBox(height: 12),
-
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      itemCount: _comments.length,
+                      itemBuilder: (ctx, i) => _buildComment(_comments[i]),
+                    ),
+                  ),
                 // Comment input
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _commentController,
-                        decoration: InputDecoration(
-                          hintText: 'Add a comment...',
-                          hintStyle: TextStyle(color: theme.textTheme.bodySmall?.color),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: theme.dividerColor),
+                Container(
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 12,
+                    top: 8,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 8,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: AppColors.white,
+                    border: Border(top: BorderSide(color: AppColors.border)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: 'Add a comment...',
+                            hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            suffixIcon: _posting
+                                ? const Padding(
+                                    padding: EdgeInsets.all(10),
+                                    child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                                  )
+                                : null,
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide(color: theme.dividerColor),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          suffixIcon: _posting
-                              ? const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                                )
-                              : null,
+                          style: const TextStyle(fontSize: 13),
+                          onSubmitted: (_) => _postComment(),
                         ),
-                        onSubmitted: (_) => _postComment(),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: _posting ? null : _postComment,
-                      icon: Icon(Icons.send, color: AppColors.indigo),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: AppColors.purple,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: _posting ? null : _postComment,
+                          icon: const Icon(Icons.send, color: Colors.white, size: 18),
+                          iconSize: 18,
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -300,14 +375,14 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
             radius: 14,
-            backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-            child: Text(initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w600, fontSize: 11)),
+            backgroundColor: AppColors.purple.withValues(alpha: 0.1),
+            child: Text(initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w600, fontSize: 11)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -317,12 +392,12 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
                 Row(
                   children: [
                     Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(width: 8),
-                    Text(timeAgo, style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
+                    const SizedBox(width: 6),
+                    Text(timeAgo, style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(content, style: const TextStyle(fontSize: 14, height: 1.4)),
+                const SizedBox(height: 3),
+                Text(content, style: const TextStyle(fontSize: 13, height: 1.4)),
               ],
             ),
           ),
@@ -342,13 +417,17 @@ class _ActivityDetailScreenState extends ConsumerState<ActivityDetailScreen> {
     return configs[type] ?? configs['general']!;
   }
 
-  Color _avatarColor(String name) {
-    const colors = [AppColors.indigo, AppColors.amber, AppColors.emerald, AppColors.coral];
-    int hash = 0;
-    for (int i = 0; i < name.length; i++) {
-      hash = name.codeUnitAt(i) + ((hash << 5) - hash);
+  Color _accentColor(String type) {
+    switch (type) {
+      case 'fasting':
+      case 'fasting_complete':
+        return AppColors.purple;
+      case 'exercise':
+      case 'workout_complete':
+        return AppColors.green;
+      default:
+        return AppColors.textSecondary;
     }
-    return colors[hash.abs() % colors.length];
   }
 }
 
@@ -361,9 +440,9 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.indigo)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).textTheme.bodySmall?.color)),
+        Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.purple)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
       ],
     );
   }

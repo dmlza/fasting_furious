@@ -177,10 +177,10 @@ class _ExerciseListScreenState extends State<ExerciseListScreen> {
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       margin: const EdgeInsets.only(right: 6),
                                       decoration: BoxDecoration(
-                                        color: AppColors.amber.withValues(alpha: 0.12),
+                                        color: AppColors.purple.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
-                                      child: const Text('Custom', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.amber)),
+                                      child: const Text('Custom', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.purple)),
                                     ),
                                   if (selected)
                                     Icon(Icons.check_circle, color: color, size: 20),

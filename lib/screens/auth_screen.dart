@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:animate_do/animate_do.dart';
+import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -153,7 +156,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             center: Alignment.topCenter,
             radius: 1.5,
             colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.06),
+              AppColors.purple.withOpacity(0.06),
               Colors.transparent,
             ],
           ),
@@ -166,53 +169,72 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '\u{1F525} Fasting Furious',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.primary,
+                  FadeInDown(
+                    duration: const Duration(milliseconds: 600),
+                    child: Text(
+                      '\u{1F525} Fasting Furious',
+                      style: GoogleFonts.poppins(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.purple,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'train hard. fast harder.',
-                    style: TextStyle(color: theme.textTheme.bodySmall?.color),
+                  FadeInDown(
+                    delay: const Duration(milliseconds: 100),
+                    duration: const Duration(milliseconds: 600),
+                    child: Text(
+                      'train hard. fast harder.',
+                      style: GoogleFonts.poppins(color: AppColors.grey),
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 36),
                   if (!_isLogin)
-                    TextFormField(
-                      controller: _usernameController,
-                      enabled: !_loading,
-                      validator: _validateUsername,
-                      decoration: const InputDecoration(
-                        hintText: 'Username',
-                        prefixIcon: Icon(Icons.person_outline),
+                    FadeInDown(
+                      delay: const Duration(milliseconds: 150),
+                      duration: const Duration(milliseconds: 400),
+                      child: TextFormField(
+                        controller: _usernameController,
+                        enabled: !_loading,
+                        validator: _validateUsername,
+                        decoration: const InputDecoration(
+                          hintText: 'Username',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
                       ),
                     ),
                   if (!_isLogin) const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _emailController,
-                    enabled: !_loading,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _validateEmail,
-                    decoration: const InputDecoration(
-                      hintText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
+                  FadeInDown(
+                    delay: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 400),
+                    child: TextFormField(
+                      controller: _emailController,
+                      enabled: !_loading,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _validateEmail,
+                      decoration: const InputDecoration(
+                        hintText: 'Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _passwordController,
-                    enabled: !_loading,
-                    obscureText: _obscurePassword,
-                    validator: _validatePassword,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  FadeInDown(
+                    delay: const Duration(milliseconds: 250),
+                    duration: const Duration(milliseconds: 400),
+                    child: TextFormField(
+                      controller: _passwordController,
+                      enabled: !_loading,
+                      obscureText: _obscurePassword,
+                      validator: _validatePassword,
+                      decoration: InputDecoration(
+                        hintText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
                       ),
                     ),
                   ),
@@ -232,7 +254,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
                       ),
                       child: Row(
@@ -251,34 +273,38 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                        color: AppColors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.green.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                          const Icon(Icons.check_circle_outline, color: AppColors.green, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text(_success, style: const TextStyle(color: Colors.green, fontSize: 13)),
+                            child: Text(_success, style: const TextStyle(color: AppColors.green, fontSize: 13)),
                           ),
                         ],
                       ),
                     ),
                   ],
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : Text(_isLogin ? 'Sign In' : 'Create Account'),
+                  const SizedBox(height: 16),
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 500),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _submit,
+                        child: _loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(_isLogin ? 'Sign In' : 'Create Account'),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

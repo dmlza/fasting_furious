@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/theme.dart';
@@ -15,16 +16,21 @@ class FriendsScreen extends ConsumerStatefulWidget {
   ConsumerState<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-class _FriendsScreenState extends ConsumerState<FriendsScreen> {
+class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTickerProviderStateMixin {
   String _currentTab = 'friends';
   List<Profile> _searchResults = [];
   Timer? _searchDebounce;
   bool _searchLoading = false;
   final _searchController = TextEditingController();
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
 
   @override
   void initState() {
     super.initState();
+    _animController = AnimationController(duration: const Duration(milliseconds: 600), vsync: this);
+    _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    _animController.forward();
     _load();
   }
 
@@ -37,6 +43,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -69,6 +76,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
         title: const Text(
           'Friends',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
@@ -77,109 +88,136 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearch,
-              decoration: InputDecoration(
-                hintText: 'Search by username...',
-                prefixIcon: const Icon(Icons.search, size: 20),
-                suffixIcon: _searchLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                      )
-                    : _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() { _searchResults = []; });
-                            },
-                          )
-                        : null,
-                filled: true,
-                fillColor: theme.dividerColor.withValues(alpha: 0.3),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-          ),
-
-          // Search results
-          if (_searchResults.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: Row(
-                      children: [
-                        Text('Results', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
-                        const Spacer(),
-                        Text('${_searchResults.length} found', style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color)),
-                      ],
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: Column(
+          children: [
+            // Search bar with glassmorphism
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: _onSearch,
+                      decoration: InputDecoration(
+                        hintText: 'Search by username...',
+                        hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
+                        prefixIcon: Icon(Icons.search, size: 20, color: Theme.of(context).textTheme.bodySmall?.color),
+                        suffixIcon: _searchLoading
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                              )
+                            : _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.close, size: 18, color: Theme.of(context).textTheme.bodySmall?.color),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() { _searchResults = []; });
+                                    },
+                                  )
+                                : null,
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
                     ),
                   ),
-                  const Divider(height: 1),
-                  ..._searchResults.map((r) => _buildSearchResult(r)),
+                ),
+              ),
+            ),
+
+            // Search results
+            if (_searchResults.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.dividerColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      offset: const Offset(0, 4),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Row(
+                        children: [
+                          Text('Results', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color)),
+                          const Spacer(),
+                          Text('${_searchResults.length} found', style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color)),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    ..._searchResults.map((r) => _buildSearchResult(r)),
+                  ],
+                ),
+              ),
+
+            // Tabs with gradient active state
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Row(
+                children: [
+                  _TabButton(
+                    label: 'Friends',
+                    count: friendsState.friends.length,
+                    isActive: _currentTab == 'friends',
+                    onTap: () => setState(() => _currentTab = 'friends'),
+                  ),
+                  const SizedBox(width: 8),
+                  _TabButton(
+                    label: 'Requests',
+                    count: friendsState.friendRequests.length,
+                    isActive: _currentTab == 'requests',
+                    onTap: () => setState(() => _currentTab = 'requests'),
+                    showBadge: friendsState.friendRequests.isNotEmpty,
+                  ),
+                  const SizedBox(width: 8),
+                  _TabButton(
+                    label: 'Sent',
+                    count: friendsState.sentRequests.length,
+                    isActive: _currentTab == 'sent',
+                    onTap: () => setState(() => _currentTab = 'sent'),
+                  ),
                 ],
               ),
             ),
 
-          // Tabs with badge
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-            child: Row(
-              children: [
-                _TabButton(
-                  label: 'Friends',
-                  count: friendsState.friends.length,
-                  isActive: _currentTab == 'friends',
-                  onTap: () => setState(() => _currentTab = 'friends'),
-                ),
-                const SizedBox(width: 8),
-                _TabButton(
-                  label: 'Requests',
-                  count: friendsState.friendRequests.length,
-                  isActive: _currentTab == 'requests',
-                  onTap: () => setState(() => _currentTab = 'requests'),
-                  showBadge: friendsState.friendRequests.isNotEmpty,
-                ),
-                const SizedBox(width: 8),
-                _TabButton(
-                  label: 'Sent',
-                  count: friendsState.sentRequests.length,
-                  isActive: _currentTab == 'sent',
-                  onTap: () => setState(() => _currentTab = 'sent'),
-                ),
-              ],
+            // Content
+            Expanded(
+              child: friendsState.loading
+                  ? const FriendsSkeleton()
+                  : RefreshIndicator(
+                      onRefresh: _load,
+                      child: _buildContent(friendsState),
+                    ),
             ),
-          ),
-
-          // Content
-          Expanded(
-            child: friendsState.loading
-                ? const FriendsSkeleton()
-                : RefreshIndicator(
-                    onRefresh: _load,
-                    child: _buildContent(friendsState),
-                  ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -194,8 +232,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-            child: Text(r.initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w600, fontSize: 14)),
+            backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+            child: Text(r.initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w600, fontSize: 14)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -237,10 +275,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               icon: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.indigo.withValues(alpha: 0.1),
+                  color: AppColors.purple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.person_add, color: AppColors.indigo, size: 18),
+                child: const Icon(Icons.person_add, color: AppColors.purple, size: 18),
               ),
             ),
         ],
@@ -282,8 +320,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             leading: CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-              child: Text(f.initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w700, fontSize: 16)),
+              backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+              child: Text(f.initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w700, fontSize: 16)),
             ),
             title: Text(f.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: Text(
@@ -326,8 +364,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             leading: CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.amber.withValues(alpha: 0.12),
-              child: Text(initial, style: const TextStyle(color: AppColors.amber, fontWeight: FontWeight.w700, fontSize: 16)),
+              backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+              child: Text(initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w700, fontSize: 16)),
             ),
             title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: Text(
@@ -345,7 +383,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                     _load();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.emerald,
+                    backgroundColor: AppColors.green,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -354,7 +392,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 ),
                 const SizedBox(width: 6),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.danger, size: 20),
+                  icon: const Icon(Icons.close, color: AppColors.green, size: 20),
                   onPressed: () async {
                     await ref.read(friendsProvider.notifier).declineRequest(r['id']);
                     _load();
@@ -394,8 +432,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
             leading: CircleAvatar(
               radius: 22,
-              backgroundColor: AppColors.indigo.withValues(alpha: 0.12),
-              child: Text(initial, style: const TextStyle(color: AppColors.indigo, fontWeight: FontWeight.w700, fontSize: 16)),
+              backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+              child: Text(initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w700, fontSize: 16)),
             ),
             title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
             subtitle: Text(
@@ -403,7 +441,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
               style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
             ),
             trailing: IconButton(
-              icon: const Icon(Icons.close, color: AppColors.danger, size: 20),
+              icon: const Icon(Icons.close, color: AppColors.green, size: 20),
               onPressed: () async {
                 await ref.read(friendsProvider.notifier).cancelRequest(s['id']);
                 _load();
@@ -435,8 +473,8 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 onTap: () => Navigator.of(ctx).pop(),
               ),
               ListTile(
-                leading: const Icon(Icons.person_remove_outlined, color: AppColors.danger),
-                title: const Text('Remove Friend', style: TextStyle(color: AppColors.danger)),
+                leading: const Icon(Icons.person_remove_outlined, color: AppColors.green),
+                title: const Text('Remove Friend', style: TextStyle(color: AppColors.green)),
                 onTap: () async {
                   Navigator.of(ctx).pop();
                   final confirmed = await showDialog<bool>(
@@ -451,7 +489,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                          style: TextButton.styleFrom(foregroundColor: AppColors.green),
                           child: const Text('Remove'),
                         ),
                       ],
@@ -508,13 +546,21 @@ class _TabButton extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.indigo : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            gradient: isActive ? AppGradients.purpleGradient : null,
+            color: isActive ? null : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isActive ? AppColors.indigo : Theme.of(context).dividerColor,
+              color: isActive ? Colors.transparent : Theme.of(context).dividerColor,
             ),
+            boxShadow: isActive ? [
+              BoxShadow(
+                color: AppColors.purple.withValues(alpha: 0.3),
+                offset: const Offset(0, 4),
+                blurRadius: 8,
+              ),
+            ] : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -535,7 +581,7 @@ class _TabButton extends StatelessWidget {
                     color: isActive
                         ? Colors.white.withValues(alpha: 0.25)
                         : showBadge
-                            ? AppColors.coral
+                            ? AppColors.green
                             : Theme.of(context).dividerColor,
                     borderRadius: BorderRadius.circular(8),
                   ),

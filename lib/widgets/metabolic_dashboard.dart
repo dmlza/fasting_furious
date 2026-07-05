@@ -43,7 +43,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return max(0.05, 1.0 - (h / 12));
     },
     stages: ['Peak', 'Declining', 'Low', 'Minimal'],
-    color: AppColors.coral,
+    color: AppColors.green,
     science: 'Insulin is the master metabolic switch. When elevated, it locks fat cells and prevents lipolysis. Fasting is the most potent natural insulin-lowering intervention available. A 2021 study in Cell Metabolism showed intermittent fasting reduces fasting insulin by 20-40% over 12 weeks, independent of weight loss.',
     mechanism: 'After eating, pancreatic beta-cells release insulin to shuttle glucose into cells. During fasting, insulin secretion drops to basal levels (50-70% reduction). This signals adipose tissue to release free fatty acids via hormone-sensitive lipase (HSL). Low insulin also upregulates AMPK, a cellular energy sensor that promotes fat oxidation.',
     optimalRange: 'Fasting insulin: 2-5 \u00B5IU/mL is optimal for fat burning. Above 10 suggests insulin resistance. Below 2 may indicate overproduction during extended fasts.',
@@ -70,7 +70,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return max(0.3, 1.0 - (h / 8));
     },
     stages: ['Elevated', 'Normalizing', 'Stable', 'Basal'],
-    color: AppColors.amber,
+    color: AppColors.purple,
     science: 'Your body maintains blood glucose at 70-100 mg/dL through multiple redundant systems. The liver stores ~100g of glycogen (400 kcal) which sustains blood sugar for 12-24 hours. After that, gluconeogenesis (GNG) converts glycerol from fat breakdown and amino acids from muscle protein into glucose. GNG is demand-driven, not supply-driven.',
     mechanism: 'Glucagon (insulin\'s counterpart) rises as blood glucose falls. It signals hepatocytes to break down glycogen via glycogenolysis. As glycogen depletes (~18h), GNG becomes primary. The brain consumes ~120g glucose/day but adapts to use ketones for up to 75% of energy, dramatically reducing glucose demand.',
     optimalRange: 'Fasting glucose: 70-90 mg/dL optimal. 90-100 is normal but not optimal. Below 65 may cause neuroglycopenia symptoms.',
@@ -96,7 +96,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return min(1.0, (h - 12) / 36);
     },
     stages: ['Inactive', 'Initiating', 'Ramping', 'Peak'],
-    color: AppColors.emerald,
+    color: AppColors.green,
     science: 'Autophagy (Greek: "self-eating") is the cell\'s quality control system. It degrades damaged organelles, misfolded proteins, and intracellular pathogens via lysosomes. Yoshinori Ohsumi won the 2016 Nobel Prize for elucidating autophagy mechanisms. Autophagy dysfunction is linked to neurodegeneration (Alzheimer\'s, Parkinson\'s), cancer, and aging.',
     mechanism: 'mTORC1 (mechanistic target of rapamycin complex 1) is the master regulator. When nutrients are abundant, mTORC1 inhibits autophagy. Fasting inactivates mTORC1 via AMPK activation and reduced amino acid signaling. This de-represses ULK1, initiating autophagosome formation. The autophagosome engulfs cargo and fuses with lysosomes for degradation.',
     optimalRange: 'Begins measurably at 12-16h. Peaks at 48-72h. Most benefits occur in the 16-36h range. Impossible to measure directly without tissue biopsy.',
@@ -123,7 +123,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return min(1.0, (h - 8) / 40);
     },
     stages: ['Glucose', 'Transitioning', 'Ketosis', 'Deep Ketosis'],
-    color: AppColors.indigo,
+    color: AppColors.purple,
     science: 'Ketogenesis converts fatty acids into ketone bodies (BHB, acetoacetate, acetone) in hepatic mitochondria. The brain cannot oxidize fatty acids (too large to cross blood-brain barrier) but readily uses ketones. BHB is not just fuel \u2014 it\'s also a signaling molecule that inhibits class I HDACs (epigenetic modification) and activates the HCAR2 receptor (anti-inflammatory).',
     mechanism: 'As insulin drops and glucagon rises, hormone-sensitive lipase (HSL) liberates free fatty acids from adipose tissue. Fatty acids undergo beta-oxidation in liver mitochondria to produce acetyl-CoA. When acetyl-CoA exceeds TCA capacity, it\'s shunted to ketogenesis via HMG-CoA synthase. BHB reaches brain via MCT1 transporters.',
     optimalRange: 'Mild: 0.3-0.5 mM. Nutritional ketosis: 0.5-3.0 mM. Therapeutic: 3.0-5.0 mM. Above 10 mM = ketoacidosis (medical emergency, only in T1D).',
@@ -150,7 +150,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return max(0.5, 1.0 - (h - 24) / 48);
     },
     stages: ['Baseline', 'Rising', 'Elevated', 'Peak'],
-    color: AppColors.emerald,
+    color: AppColors.green,
     science: 'Growth hormone (GH) increases 2-5x during 24h fasts and up to 5x during 5-day fasts (Ho et al., 1988). Unlike calorie restriction which suppresses GH, fasting preserves it. GH promotes lipolysis, spares muscle protein, and stimulates IGF-1 for tissue repair. This is why fasting preserves lean mass better than equivalent calorie reduction.',
     mechanism: 'GH is secreted by anterior pituitary somatotroph cells in a pulsatile pattern, regulated by GHRH (stimulatory) and somatostatin (inhibitory). Fasting suppresses somatostatin and enhances GHRH. Low blood glucose and low IGF-1 levels further disinhibit GH release. GH acts on liver to produce IGF-1, which mediates many growth effects.',
     optimalRange: 'Fasting GH peaks at 12-24h. Normal range: 0.4-10 ng/mL. During fasting: 10-30 ng/mL is common.',
@@ -177,7 +177,7 @@ final List<MetabolicProcess> metabolicProcesses = [
       return min(1.0, 0.1 + (h - 12) / 36);
     },
     stages: ['Baseline', 'Rising', 'Enhanced', 'Peak Focus'],
-    color: AppColors.amber,
+    color: AppColors.purple,
     science: 'Norepinephrine (NE) is released by sympathetic nerve terminals and adrenal medulla during fasting. NE activates beta-adrenergic receptors on fat cells, triggering lipolysis. It also crosses the blood-brain barrier, enhancing alertness, attention, and memory consolidation. This is an evolutionary adaptation for hunting efficiency during food scarcity.',
     mechanism: 'Fasting activates the sympathetic nervous system via hypothalamic orexin neurons. NE binds beta-3 adrenergic receptors on adipocytes, activating adenylyl cyclase -> cAMP -> PKA -> HSL phosphorylation -> fat breakdown. NE also enhances prefrontal cortex activity via alpha-2A adrenoceptors.',
     optimalRange: 'Moderate NE elevation improves focus. Excessive levels (>2x baseline) may cause anxiety, tremor, or insomnia.',
@@ -413,12 +413,12 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.indigo.withValues(alpha: 0.08),
-              AppColors.emerald.withValues(alpha: 0.08),
+              AppColors.purple.withValues(alpha: 0.08),
+              AppColors.green.withValues(alpha: 0.08),
             ],
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.indigo.withValues(alpha: 0.15)),
+          border: Border.all(color: AppColors.purple.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
@@ -449,12 +449,12 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.indigo.withValues(alpha: 0.08),
-            AppColors.emerald.withValues(alpha: 0.08),
+            AppColors.purple.withValues(alpha: 0.08),
+            AppColors.green.withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.emerald.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.green.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,12 +480,12 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.emerald.withValues(alpha: 0.1),
+              color: AppColors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               milestone.encouragement,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.emerald),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green),
             ),
           ),
         ],
@@ -497,7 +497,7 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
     final achieved = metabolicProcesses.where((p) => p.calculate(widget.hoursElapsed) > 0.5).length;
     return Row(
       children: [
-        Icon(Icons.bolt, size: 16, color: AppColors.amber),
+        Icon(Icons.bolt, size: 16, color: AppColors.purple),
         const SizedBox(width: 6),
         Text(
           '$achieved of ${metabolicProcesses.length} processes active',
@@ -508,12 +508,12 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.emerald.withValues(alpha: 0.1),
+              color: AppColors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Text(
+            child: Text(
               '\u{1F525} On Fire',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.emerald),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.green),
             ),
           ),
       ],
@@ -555,9 +555,9 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.indigo.withValues(alpha: 0.06),
+        color: AppColors.purple.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.indigo.withValues(alpha: 0.15)),
+        border: Border.all(color: AppColors.purple.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,12 +568,12 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.info_outline, size: 14, color: AppColors.indigo.withValues(alpha: 0.6)),
+              Icon(Icons.info_outline, size: 14, color: AppColors.purple.withValues(alpha: 0.6)),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   impact,
-                  style: TextStyle(fontSize: 11, color: AppColors.indigo.withValues(alpha: 0.8), fontStyle: FontStyle.italic),
+                  style: TextStyle(fontSize: 11, color: AppColors.purple.withValues(alpha: 0.8), fontStyle: FontStyle.italic),
                 ),
               ),
             ],
@@ -599,15 +599,15 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: achieved
-                  ? AppColors.emerald.withValues(alpha: 0.06)
+                  ? AppColors.green.withValues(alpha: 0.06)
                   : isNext
-                      ? AppColors.amber.withValues(alpha: 0.04)
+                      ? AppColors.purple.withValues(alpha: 0.04)
                       : Colors.transparent,
               borderRadius: BorderRadius.circular(10),
               border: isNext
-                  ? Border.all(color: AppColors.amber.withValues(alpha: 0.3))
+                  ? Border.all(color: AppColors.purple.withValues(alpha: 0.3))
                   : achieved
-                      ? Border.all(color: AppColors.emerald.withValues(alpha: 0.15))
+                      ? Border.all(color: AppColors.green.withValues(alpha: 0.15))
                       : null,
             ),
             child: Row(
@@ -626,7 +626,7 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: achieved ? AppColors.emerald : theme.textTheme.bodySmall?.color,
+                          color: achieved ? AppColors.green : theme.textTheme.bodySmall?.color,
                         ),
                       ),
                     ],
@@ -635,7 +635,7 @@ class _MetabolicDashboardState extends State<MetabolicDashboard>
                 if (isNext)
                   Text(
                     '${(m.hour - widget.hoursElapsed).toStringAsFixed(0)}h left',
-                    style: TextStyle(fontSize: 10, color: AppColors.amber, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 10, color: AppColors.purple, fontWeight: FontWeight.w600),
                   ),
               ],
             ),
