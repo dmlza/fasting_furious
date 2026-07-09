@@ -1,8 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://ubiuoinbhbegznphuwwa.supabase.co',
+  );
+  static const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViaXVvaW5iaGJlZ3pucGh1d3dhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzU2MTIsImV4cCI6MjA5Nzk1MTYxMn0.moG7EtjC-1HUM3v6ZTI-NYJVFJLEsM1x4IVBjSS_Fng',
+  );
 }
 
 class SupabaseService {
