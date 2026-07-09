@@ -65,9 +65,9 @@ class SupabaseService {
   /// Auto-friend new users with the demo accounts (Eric & Ariel)
   /// so their feed has content immediately.
   Future<void> autoFriendSeedAccounts(String userId) async {
+    await _ensureSeedAccounts();
     for (final seedId in _seedUserIds) {
       try {
-        // Check if friendship already exists
         final existing = await client
             .from('friendships')
             .select('id')
@@ -75,7 +75,6 @@ class SupabaseService {
             .maybeSingle();
         if (existing != null) continue;
 
-        // Create accepted friendship
         await client.from('friendships').insert({
           'sender_id': userId,
           'receiver_id': seedId,
@@ -83,6 +82,101 @@ class SupabaseService {
         });
       } catch (_) {}
     }
+  }
+
+  bool _seeded = false;
+
+  /// Creates Eric & Ariel accounts + sample data if they don't exist yet.
+  Future<void> _ensureSeedAccounts() async {
+    if (_seeded) return;
+    try {
+      // Check if Eric already exists
+      final existing = await client
+          .from('profiles')
+          .select('id')
+          .eq('id', _seedUserIds[0])
+          .maybeSingle();
+      if (existing != null) {
+        _seeded = true;
+        return;
+      }
+
+      // Create Eric
+      final ericRes = await client.auth.signUp(
+        email: 'eric@fastingfurious.demo',
+        password: 'demo123456',
+        data: {'username': 'eric_fasts', 'display_name': 'Eric Torres'},
+      );
+      if (ericRes.user != null) {
+        await client.from('profiles').upsert({
+          'id': _seedUserIds[0],
+          'username': 'eric_fasts',
+          'display_name': 'Eric Torres',
+          'bio': '16:8 warrior. Down 15lbs in 2 months. Coffee before noon only.',
+        });
+      }
+
+      // Create Ariel
+      final arielRes = await client.auth.signUp(
+        email: 'ariel@fastingfurious.demo',
+        password: 'demo123456',
+        data: {'username': 'ariel_fit', 'display_name': 'Ariel Chen'},
+      );
+      if (arielRes.user != null) {
+        await client.from('profiles').upsert({
+          'id': _seedUserIds[1],
+          'username': 'ariel_fit',
+          'display_name': 'Ariel Chen',
+          'bio': 'Fitness coach. 20:4 OMAD. Runner. Plant-based.',
+        });
+      }
+
+      // Seed posts for Eric
+      final ericId = ericRes.user?.id ?? _seedUserIds[0];
+      final arielId = arielRes.user?.id ?? _seedUserIds[1];
+
+      await client.from('posts').insert([
+        {'user_id': ericId, 'type': 'fasting_complete', 'content': 'Completed a 16:8 fast! Feeling unstoppable.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
+        {'user_id': ericId, 'type': 'exercise', 'content': 'Crushing 30min of chest and triceps today', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': ericId, 'type': 'general', 'content': 'Day 45 of my fasting journey. Down 15lbs total. The energy is unreal.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+      ]);
+
+      // Seed posts for Ariel
+      await client.from('posts').insert([
+        {'user_id': arielId, 'type': 'fasting_complete', 'content': '20:4 OMAD complete. Bone broth to break the fast.', 'created_at': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String()},
+        {'user_id': arielId, 'type': 'workout_complete', 'content': 'Just finished a 45min HIIT session. Heart rate peaked at 175.', 'created_at': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String()},
+        {'user_id': arielId, 'type': 'exercise', 'content': 'Morning run done before sunrise. 5K in 24min.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': arielId, 'type': 'general', 'content': 'Week 3 of 20:4. Sleep has improved dramatically. No more 2am wakes.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+        {'user_id': arielId, 'type': 'fasting', 'content': 'Currently fasting. 14 hours in. Black coffee is keeping me going.', 'created_at': DateTime.now().subtract(const Duration(hours: 6)).toIso8601String()},
+      ]);
+
+      // Seed habits for last 7 days
+      final today = DateTime.now();
+      for (int i = 0; i < 7; i++) {
+        final date = today.subtract(Duration(days: i)).toIso8601String().split('T')[0];
+        await client.from('habits').upsert({
+          'user_id': ericId,
+          'date': date,
+          'exercise': i % 3 != 0,
+          'no_sugar': i >= 2,
+          'no_smoking': true,
+          'exercise_minutes': i % 3 == 0 ? 0 : 30 + (i * 5) % 20,
+          'fasting_hours': i % 4 == 0 ? 14 : 16,
+        }, onConflict: 'user_id,date');
+
+        await client.from('habits').upsert({
+          'user_id': arielId,
+          'date': date,
+          'exercise': true,
+          'no_sugar': true,
+          'no_smoking': true,
+          'exercise_minutes': 45 + (i * 7) % 15,
+          'fasting_hours': i % 3 == 0 ? 18 : 20,
+        }, onConflict: 'user_id,date');
+      }
+
+      _seeded = true;
+    } catch (_) {}
   }
 
   // Profiles
