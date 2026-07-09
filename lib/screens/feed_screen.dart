@@ -44,10 +44,6 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
         title: const Text(
           'Activity',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),

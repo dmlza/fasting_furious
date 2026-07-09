@@ -98,10 +98,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
         title: const Text(
           'Fasting Furious',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),

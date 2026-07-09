@@ -111,10 +111,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
         title: const Text(
           'Profile',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),

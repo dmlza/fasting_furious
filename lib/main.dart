@@ -17,7 +17,6 @@ import 'screens/feed_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/friends_screen.dart';
 import 'widgets/floating_pill_nav_bar.dart';
-import 'widgets/app_drawer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -122,17 +121,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   final _screens = const [
     HomeScreen(),
     FriendsScreen(),
+    SizedBox.shrink(), // placeholder for create button (index 2)
     FeedScreen(),
     ProfileScreen(),
   ];
-
-  int _getScreenIndex(int navIndex) {
-    if (navIndex == 0) return 0;
-    if (navIndex == 1) return 1;
-    if (navIndex == 3) return 2;
-    if (navIndex == 4) return 3;
-    return 0;
-  }
 
   @override
   void initState() {
@@ -152,12 +144,8 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       extendBody: true,
-      drawer: AppDrawer(onNavigate: (index) {
-        Navigator.pop(context);
-        setState(() => _currentIndex = index);
-      }),
       body: SafeArea(
-        child: _screens[_getScreenIndex(_currentIndex)],
+        child: _screens[_currentIndex],
       ),
       bottomNavigationBar: FloatingPillNavBar(
         selectedIndex: _currentIndex,
