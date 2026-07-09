@@ -100,11 +100,19 @@ lib/
    flutter run --dart-define=SUPABASE_URL=your_url --dart-define=SUPABASE_ANON_KEY=your_key
    ```
 
-3. Run the app:
+3. Seed demo data (Eric & Ariel) — run `sql/seed_data.sql` in your Supabase SQL editor. This creates:
+   - 2 demo profiles with bios
+   - 14 days of habit history for each
+   - 8 sample posts (fasting, workouts, general updates)
+   - Reactions between the demo users
+
+4. Run the app:
    ```bash
    flutter pub get
    flutter run
    ```
+
+New users are automatically friended with Eric and Ariel so the feed has content from day one.
 
 ### Database Schema
 

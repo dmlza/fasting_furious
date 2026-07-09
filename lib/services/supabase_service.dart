@@ -1,5 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Demo account IDs — match sql/seed_data.sql
+const _seedUserIds = [
+  'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', // Eric
+  'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', // Ariel
+];
+
 class SupabaseConfig {
   static const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
@@ -54,6 +60,29 @@ class SupabaseService {
 
   Future<void> resetPassword(String email) {
     return client.auth.resetPasswordForEmail(email);
+  }
+
+  /// Auto-friend new users with the demo accounts (Eric & Ariel)
+  /// so their feed has content immediately.
+  Future<void> autoFriendSeedAccounts(String userId) async {
+    for (final seedId in _seedUserIds) {
+      try {
+        // Check if friendship already exists
+        final existing = await client
+            .from('friendships')
+            .select('id')
+            .or('and(sender_id.eq.$userId,receiver_id.eq.$seedId),and(sender_id.eq.$seedId,receiver_id.eq.$userId)')
+            .maybeSingle();
+        if (existing != null) continue;
+
+        // Create accepted friendship
+        await client.from('friendships').insert({
+          'sender_id': userId,
+          'receiver_id': seedId,
+          'status': 'accepted',
+        });
+      } catch (_) {}
+    }
   }
 
   // Profiles

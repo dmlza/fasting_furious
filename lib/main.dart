@@ -100,6 +100,8 @@ class _ProfileLoaderState extends ConsumerState<ProfileLoader> {
       final user = ref.read(currentUserProvider);
       if (user != null) {
         ref.read(profileProvider.notifier).fetchProfile(user.id);
+        // Auto-friend with demo accounts so feed has content
+        ref.read(supabaseServiceProvider).autoFriendSeedAccounts(user.id);
       }
     });
   }
