@@ -119,8 +119,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      AppColors.white.withValues(alpha: 0.0),
-                                      AppColors.white.withValues(alpha: 1.0),
+                                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.0),
+                                      Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 1.0),
                                     ],
                                   ),
                                 ),
@@ -273,7 +273,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border(
             left: BorderSide(color: accent, width: 4),
@@ -514,9 +514,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(20),
         child: Column(

@@ -14,8 +14,7 @@ class SkeletonBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 800),
+    return Container(
       width: width,
       height: height,
       decoration: BoxDecoration(

@@ -107,8 +107,6 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _LegendDot(color: AppColors.purple, label: 'Fasting Hours'),
-                const SizedBox(width: 20),
-                _LegendDot(color: AppColors.purple, label: 'Goal (16h)'),
               ],
             ),
           ],

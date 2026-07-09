@@ -122,29 +122,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                   duration: const Duration(milliseconds: 600),
                   child: _buildTimerSection(habitState, isDark),
                 ),
-                const SizedBox(height: 24),
-                if (habitState.gridLayout.contains('no_sugar'))
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 500),
-                    delay: const Duration(milliseconds: 100),
-                    child: _buildSugarCard(habitState, isDark),
-                  ),
-                if (habitState.gridLayout.contains('no_sugar'))
-                  const SizedBox(height: 16),
-                if (habitState.gridLayout.contains('exercise'))
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 500),
-                    delay: const Duration(milliseconds: 200),
-                    child: _buildExerciseCard(habitState, isDark),
-                  ),
-                if (habitState.gridLayout.contains('exercise'))
-                  const SizedBox(height: 16),
-                if (habitState.gridLayout.contains('no_smoking'))
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 500),
-                    delay: const Duration(milliseconds: 300),
-                    child: _buildSmokingCard(habitState, isDark),
-                  ),
+                const SizedBox(height: 20),
+                // Bento grid for habit cards
+                _buildBentoGrid(habitState, isDark),
               ],
             ),
           ),
@@ -308,18 +288,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     );
   }
 
-  Widget _buildSugarCard(HabitState state, bool isDark) {
+  Widget _buildBentoGrid(HabitState state, bool isDark) {
+    final showSugar = state.gridLayout.contains('no_sugar');
+    final showExercise = state.gridLayout.contains('exercise');
+    final showSmoking = state.gridLayout.contains('no_smoking');
+
+    return Column(
+      children: [
+        // Row 1: Sugar + Exercise side by side
+        if (showSugar || showExercise)
+          FadeInUp(
+            duration: const Duration(milliseconds: 500),
+            delay: const Duration(milliseconds: 100),
+            child: Row(
+              children: [
+                if (showSugar) Expanded(child: _buildSugarBentoTile(state, isDark)),
+                if (showSugar && showExercise) const SizedBox(width: 12),
+                if (showExercise) Expanded(child: _buildExerciseBentoTile(state, isDark)),
+              ],
+            ),
+          ),
+        if ((showSugar || showExercise) && showSmoking)
+          const SizedBox(height: 12),
+        // Row 2: Smoking full width
+        if (showSmoking)
+          FadeInUp(
+            duration: const Duration(milliseconds: 500),
+            delay: const Duration(milliseconds: 200),
+            child: _buildSmokingBentoTile(state, isDark),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSugarBentoTile(HabitState state, bool isDark) {
     final streak = state.getStreak('no_sugar');
 
     return GestureDetector(
       onTap: () => _showSugarMilestones(state),
       child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border(
-            left: BorderSide(color: AppColors.purple, width: 4),
-          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.04),
@@ -328,59 +339,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('\u{1F525}', style: TextStyle(fontSize: 20)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.purple.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '$streak',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.purple),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'day${streak != 1 ? 's' : ''}',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text('No Sugar', style: TextStyle(fontSize: 12, color: AppColors.grey)),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.grey),
-            ],
-          ),
+              child: const Text('\u{1F525}', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '$streak',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.purple),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'day${streak != 1 ? 's' : ''}',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey),
+            ),
+            const SizedBox(height: 2),
+            Text('No Sugar', style: TextStyle(fontSize: 12, color: AppColors.grey)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildExerciseCard(HabitState state, bool isDark) {
+  Widget _buildExerciseBentoTile(HabitState state, bool isDark) {
     return GestureDetector(
       onTap: () => _showExerciseModal(),
       child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border(
-            left: BorderSide(color: AppColors.green, width: 4),
-          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.04),
@@ -389,61 +384,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.green.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('\u{1F3C3}', style: TextStyle(fontSize: 20)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.green.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          '${state.habits.exerciseMinutes}',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.green),
-                        ),
-                        Text(
-                          ' / 30 min',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text("Today's Workout", style: TextStyle(fontSize: 12, color: AppColors.grey)),
-                  ],
+              child: const Text('\u{1F3C3}', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${state.habits.exerciseMinutes}',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.green),
                 ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.grey),
-            ],
-          ),
+                Text(
+                  ' / 30',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.grey),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text('minutes', style: TextStyle(fontSize: 12, color: AppColors.grey)),
+            const SizedBox(height: 2),
+            Text("Today's Workout", style: TextStyle(fontSize: 12, color: AppColors.grey)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildSmokingCard(HabitState state, bool isDark) {
+  Widget _buildSmokingBentoTile(HabitState state, bool isDark) {
     final streak = state.getStreak('no_smoking');
     final timeSinceQuit = Duration(days: streak);
 
     return GestureDetector(
       onTap: () => _showHealthTimeline(timeSinceQuit),
       child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border(
-            left: BorderSide(color: AppColors.green, width: 4),
-          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.04),
@@ -452,73 +438,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.green.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text('\u{1F6AB}', style: TextStyle(fontSize: 20)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.green.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              '$streak',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.green),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'day${streak != 1 ? 's' : ''}',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text('No Smoking', style: TextStyle(fontSize: 12, color: AppColors.grey)),
-                      ],
-                    ),
+                  child: const Text('\u{1F6AB}', style: TextStyle(fontSize: 18)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '$streak',
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.green),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'day${streak != 1 ? 's' : ''}',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.grey),
+                          ),
+                        ],
+                      ),
+                      Text('No Smoking', style: TextStyle(fontSize: 12, color: AppColors.grey)),
+                    ],
                   ),
-                  Switch(
-                    value: state.habits.noSmoking,
-                    activeThumbColor: AppColors.green,
-                    onChanged: (_) {
-                      final user = ref.read(currentUserProvider);
-                      if (user != null) ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              HealthRecoveryTimeline(
-                timeSinceQuit: timeSinceQuit,
-                compact: true,
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'View Timeline',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.grey),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.grey),
-                ],
-              ),
-            ],
-          ),
+                ),
+                Switch(
+                  value: state.habits.noSmoking,
+                  activeThumbColor: AppColors.green,
+                  onChanged: (_) {
+                    final user = ref.read(currentUserProvider);
+                    if (user != null) ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            HealthRecoveryTimeline(
+              timeSinceQuit: timeSinceQuit,
+              compact: true,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'View Timeline',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.grey),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.grey),
+              ],
+            ),
+          ],
         ),
       ),
     );

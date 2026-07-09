@@ -124,7 +124,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
-    if (email.isEmpty || !_validateEmail(email).toString().contains('null')) {
+    if (email.isEmpty || _validateEmail(email) != null) {
       setState(() { _error = 'Enter your email above first'; });
       return;
     }
@@ -156,7 +156,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             center: Alignment.topCenter,
             radius: 1.5,
             colors: [
-              AppColors.purple.withOpacity(0.06),
+              AppColors.purple.withValues(alpha: 0.06),
               Colors.transparent,
             ],
           ),

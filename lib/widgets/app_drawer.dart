@@ -4,9 +4,13 @@ import '../config/theme.dart';
 import '../providers/auth_provider.dart';
 import '../providers/habit_provider.dart';
 import '../providers/feed_provider.dart';
+import '../screens/stats_screen.dart';
+import '../screens/workout_history_screen.dart';
 
 class AppDrawer extends ConsumerWidget {
-  const AppDrawer({super.key});
+  final ValueChanged<int>? onNavigate;
+
+  const AppDrawer({super.key, this.onNavigate});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,32 +115,24 @@ class AppDrawer extends ConsumerWidget {
                     _DrawerItem(
                       icon: Icons.home_outlined,
                       label: 'Home',
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
+                      onTap: () => onNavigate?.call(0),
                     ),
                     _DrawerItem(
                       icon: Icons.article_outlined,
                       label: 'Activity Feed',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to feed tab
-                      },
+                      onTap: () => onNavigate?.call(2),
                     ),
                     _DrawerItem(
                       icon: Icons.people_outline,
                       label: 'Friends',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to friends tab
-                      },
+                      onTap: () => onNavigate?.call(1),
                     ),
                     _DrawerItem(
                       icon: Icons.bar_chart_outlined,
                       label: 'Statistics',
                       onTap: () {
                         Navigator.pop(context);
-                        // Navigate to stats
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StatsScreen()));
                       },
                     ),
                     _DrawerItem(
@@ -144,7 +140,7 @@ class AppDrawer extends ConsumerWidget {
                       label: 'Workouts',
                       onTap: () {
                         Navigator.pop(context);
-                        // Navigate to workouts
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WorkoutHistoryScreen()));
                       },
                     ),
                     const Padding(
@@ -154,10 +150,7 @@ class AppDrawer extends ConsumerWidget {
                     _DrawerItem(
                       icon: Icons.settings_outlined,
                       label: 'Settings',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to settings
-                      },
+                      onTap: () => onNavigate?.call(3),
                     ),
                     _DrawerItem(
                       icon: Icons.help_outline,

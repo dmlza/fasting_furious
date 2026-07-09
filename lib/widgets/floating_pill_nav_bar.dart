@@ -26,7 +26,9 @@ class FloatingPillNavBar extends StatelessWidget {
           child: Container(
             height: 72,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF1C2333).withValues(alpha: 0.85)
+                  : Colors.white.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -36,7 +38,9 @@ class FloatingPillNavBar extends StatelessWidget {
                 ),
               ],
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.white.withValues(alpha: 0.6),
                 width: 1,
               ),
             ),

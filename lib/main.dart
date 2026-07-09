@@ -152,7 +152,10 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       extendBody: true,
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(onNavigate: (index) {
+        Navigator.pop(context);
+        setState(() => _currentIndex = index);
+      }),
       body: SafeArea(
         child: _screens[_getScreenIndex(_currentIndex)],
       ),
