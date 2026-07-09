@@ -624,7 +624,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: [5, 10, 15, 20, 30, 45].map((m) {
+              children: [10, 15, 20, 25].map((m) {
                 return GestureDetector(
                   onTap: () {
                     Navigator.of(ctx).pop();
