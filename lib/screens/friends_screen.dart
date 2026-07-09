@@ -255,7 +255,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
                 try {
                   await ref.read(supabaseServiceProvider).sendFriendRequest(user.id, r.id);
                   await ref.read(supabaseServiceProvider).sendNotification(
-                    r.id, user.id, 'friend_request', '${user.email} sent you a friend request',
+                    r.id, user.id, 'friend_request', '${ref.read(profileProvider)?.displayName ?? 'Someone'} sent you a friend request',
                   );
                   setState(() => _searchResults = []);
                   _searchController.clear();

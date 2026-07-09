@@ -104,7 +104,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
       } else {
         await ref.read(supabaseServiceProvider).sendFriendRequest(user.id, widget.userId);
         await ref.read(supabaseServiceProvider).sendNotification(
-          widget.userId, user.id, 'friend_request', '${user.email} sent you a friend request',
+          widget.userId, user.id, 'friend_request', '${ref.read(profileProvider)?.displayName ?? 'Someone'} sent you a friend request',
         );
         setState(() => _requestSent = true);
         if (mounted) {
