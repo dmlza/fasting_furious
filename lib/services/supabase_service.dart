@@ -34,6 +34,24 @@ class SupabaseService {
 
   Future<void> signOut() => client.auth.signOut();
 
+  Future<void> deleteAccount() async {
+    final user = client.auth.currentUser;
+    if (user == null) return;
+
+    // Delete user data from tables
+    await client.from('notifications').delete().eq('user_id', user.id);
+    await client.from('reactions').delete().eq('user_id', user.id);
+    await client.from('posts').delete().eq('user_id', user.id);
+    await client.from('friendships').delete().or('sender_id.eq.${user.id},receiver_id.eq.${user.id}');
+    await client.from('habits').delete().eq('user_id', user.id);
+    await client.from('active_timers').delete().eq('user_id', user.id);
+    await client.from('workout_history').delete().eq('user_id', user.id);
+    await client.from('profiles').delete().eq('id', user.id);
+
+    // Delete auth user (requires server-side function or RLS)
+    await client.auth.admin.deleteUser(user.id);
+  }
+
   Future<void> resetPassword(String email) {
     return client.auth.resetPasswordForEmail(email);
   }

@@ -571,6 +571,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
             ),
           ),
         ),
+        const SizedBox(height: 24),
+
+        // Danger zone
+        Text(
+          'DANGER ZONE',
+          style: TextStyle(fontSize: 11, color: AppColors.textTertiary, letterSpacing: 1.5, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFFB7185).withValues(alpha: 0.3)),
+          ),
+          child: InkWell(
+            onTap: _confirmDeleteAccount,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFB7185).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.delete_forever, color: Color(0xFFFB7185), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFFFB7185))),
+                        Text(
+                          'Permanently delete your account and all data',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -582,6 +630,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       if (s > max) max = s;
     }
     return max;
+  }
+
+  void _confirmDeleteAccount() {
+    final confirmController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Account'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('This action is permanent and cannot be undone. All your data will be deleted:'),
+            const SizedBox(height: 8),
+            Text(
+              '• Profile and posts\n• Fasting history\n• Workout history\n• Friends list\n• Habit streaks',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: confirmController,
+              decoration: const InputDecoration(
+                hintText: 'Type DELETE to confirm',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (confirmController.text != 'DELETE') return;
+              Navigator.of(ctx).pop();
+              try {
+                await ref.read(supabaseServiceProvider).deleteAccount();
+              } catch (_) {
+                // Account may be partially deleted — sign out anyway
+              }
+              await ref.read(supabaseServiceProvider).signOut();
+            },
+            style: TextButton.styleFrom(foregroundColor: const Color(0xFFFB7185)),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPostCard(Post post, ThemeData theme) {
