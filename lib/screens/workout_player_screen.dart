@@ -27,9 +27,10 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   bool _isPaused = false;
   bool _hasStarted = false;
   bool _isBreak = false;
-  int _breakSeconds = 10;
+  int _breakSeconds = 60;
   int _elapsedSeconds = 0;
-  final int _restBetweenExercises = 10;
+  int _restDuration = 60;
+  final Map<String, int> _repsPerExercise = {};
 
   @override
   void initState() {
@@ -44,11 +45,11 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     }
 
     final exercise = widget.exercises[_currentExerciseIndex];
-    _repsCompleted = 0;
-    _hasStarted = false;
+    _repsCompleted = _repsPerExercise[exercise.name] ?? 0;
+    _hasStarted = _repsCompleted > 0;
 
     if (exercise.isTimeBased) {
-      _secondsRemaining = exercise.defaultDurationSeconds!;
+      _secondsRemaining = exercise.defaultDurationSeconds ?? 1;
     } else {
       _secondsRemaining = 0;
     }
@@ -88,14 +89,33 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     setState(() => _isPaused = !_isPaused);
   }
 
+  void _resetExercise() {
+    final exercise = widget.exercises[_currentExerciseIndex];
+    _tickTimer?.cancel();
+    setState(() {
+      _hasStarted = false;
+      _isPaused = false;
+      _repsCompleted = 0;
+      if (exercise.isTimeBased) {
+        _secondsRemaining = exercise.defaultDurationSeconds ?? 1;
+      }
+    });
+  }
+
   void _completeExercise() {
     _tickTimer?.cancel();
 
+    final exercise = widget.exercises[_currentExerciseIndex];
+    if (exercise.isRepsBased) {
+      _repsPerExercise[exercise.name] = _repsCompleted;
+    }
+
     if (_currentExerciseIndex < widget.exercises.length - 1) {
       setState(() => _isBreak = true);
-      _breakSeconds = _restBetweenExercises;
+      _breakSeconds = _restDuration;
 
       _tickTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_isPaused) return;
         setState(() {
           _breakSeconds--;
           if (_breakSeconds <= 0) {
@@ -135,7 +155,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
 
     final repsPerExercise = <String, int>{};
     for (final e in widget.exercises) {
-      repsPerExercise[e.name] = e.isRepsBased ? e.defaultReps ?? 0 : 0;
+      repsPerExercise[e.name] = _repsPerExercise[e.name] ?? (e.isRepsBased ? e.defaultReps ?? 0 : 0);
     }
 
     Navigator.of(context).pushReplacement(
@@ -193,6 +213,11 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
+              _formatElapsed(_elapsedSeconds),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
+            ),
+            const SizedBox(height: 24),
+            Text(
               'Rest',
               style: TextStyle(fontSize: 16, color: theme.textTheme.bodySmall?.color, fontWeight: FontWeight.w600),
             ),
@@ -200,6 +225,44 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             Text(
               '$_breakSeconds',
               style: const TextStyle(fontSize: 64, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            // Rest duration selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [30, 60, 90].map((secs) {
+                final isSelected = _restDuration == secs;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _restDuration = secs;
+                        if (_isBreak) _breakSeconds = secs;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.purple.withValues(alpha: 0.12) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? AppColors.purple : theme.dividerColor,
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        '${secs}s',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? AppColors.purple : theme.textTheme.bodySmall?.color,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 16),
             if (nextExercise != null) ...[
@@ -271,25 +334,24 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  _formatElapsed(_elapsedSeconds),
-                  style: TextStyle(fontSize: 13, color: theme.textTheme.bodySmall?.color, fontWeight: FontWeight.w600),
-                ),
+                const SizedBox(width: 48),
               ],
             ),
           ),
 
-          // Exercise content
+          // Hero timer/counter + exercise info
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
+                  const SizedBox(height: 8),
+                  // Hero display — the main thing users see mid-set
+                  if (exercise.isTimeBased)
+                    _buildHeroTimer(exercise, color, theme)
+                  else
+                    _buildHeroReps(exercise, color, theme),
                   const SizedBox(height: 16),
-                  // Exercise demo placeholder
-                  _buildExerciseDemo(exercise, color, theme),
-                  const SizedBox(height: 24),
                   // Exercise name
                   Text(
                     exercise.name,
@@ -309,12 +371,9 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Reps/Timer display
-                  if (exercise.isTimeBased)
-                    _buildTimerDisplay(color, theme)
-                  else
-                    _buildRepsDisplay(exercise, color, theme),
+                  const SizedBox(height: 20),
+                  // Demo image (smaller, below the timer)
+                  _buildExerciseDemo(exercise, color, theme),
                   const SizedBox(height: 20),
                   // Instructions
                   _buildInstructions(exercise, theme),
@@ -331,11 +390,9 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   }
 
   Widget _buildExerciseDemo(Exercise exercise, Color color, ThemeData theme) {
-    // Placeholder for exercise demo image
-    // Replace with NetworkImage('your-url') when you have real images
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 140,
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
@@ -344,145 +401,163 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(exercise.name[0], style: TextStyle(fontSize: 48, fontWeight: FontWeight.w800, color: color.withValues(alpha: 0.3))),
-          const SizedBox(height: 8),
+          Text(exercise.name[0], style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: color.withValues(alpha: 0.3))),
+          const SizedBox(height: 6),
           Text(
             'Demo Image',
-            style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+            style: TextStyle(fontSize: 11, color: theme.textTheme.bodySmall?.color),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             'Add exercise images to assets',
-            style: TextStyle(fontSize: 10, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
+            style: TextStyle(fontSize: 9, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimerDisplay(Color color, ThemeData theme) {
-    final exercise = widget.exercises[_currentExerciseIndex];
+  Widget _buildHeroTimer(Exercise exercise, Color color, ThemeData theme) {
     final totalSeconds = exercise.defaultDurationSeconds ?? 1;
     final ringProgress = _secondsRemaining / totalSeconds;
-
-    if (!_hasStarted) {
-      return Column(
-        children: [
-          SizedBox(
-            width: 140,
-            height: 140,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 140,
-                  height: 140,
-                  child: CircularProgressIndicator(
-                    value: 1.0,
-                    strokeWidth: 8,
-                    backgroundColor: theme.dividerColor.withValues(alpha: 0.2),
-                    valueColor: AlwaysStoppedAnimation(color.withValues(alpha: 0.3)),
-                  ),
-                ),
-                Text(
-                  _formatTime(_secondsRemaining),
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: color.withValues(alpha: 0.5)),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Get Ready',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
-          ),
-        ],
-      );
-    }
+    final isLast10 = _secondsRemaining <= 10 && _hasStarted;
+    final timerColor = isLast10 ? AppColors.green : color;
 
     return Column(
       children: [
+        // Elapsed time — small, above the ring
+        Text(
+          _formatElapsed(_elapsedSeconds),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
+        ),
+        const SizedBox(height: 12),
+        // Big countdown ring
         SizedBox(
-          width: 140,
-          height: 140,
+          width: 180,
+          height: 180,
           child: Stack(
             alignment: Alignment.center,
             children: [
               SizedBox(
-                width: 140,
-                height: 140,
+                width: 180,
+                height: 180,
                 child: CircularProgressIndicator(
-                  value: ringProgress.clamp(0.0, 1.0),
-                  strokeWidth: 8,
+                  value: _hasStarted ? ringProgress.clamp(0.0, 1.0) : 1.0,
+                  strokeWidth: 10,
                   backgroundColor: theme.dividerColor.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation(color),
+                  valueColor: AlwaysStoppedAnimation(
+                    _hasStarted ? timerColor : color.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
-              Text(
-                _formatTime(_secondsRemaining),
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: _secondsRemaining <= 10 ? AppColors.green : color,
-                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _formatTime(_secondsRemaining),
+                    style: TextStyle(
+                      fontSize: 44,
+                      fontWeight: FontWeight.w800,
+                      color: _hasStarted ? timerColor : color.withValues(alpha: 0.5),
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isPaused ? 'PAUSED' : _hasStarted ? 'remaining' : 'Get Ready',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _isPaused
+                          ? AppColors.purple
+                          : _hasStarted
+                              ? timerColor
+                              : theme.textTheme.bodySmall?.color,
+                    ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _isPaused ? 'PAUSED' : 'Time Remaining',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: _isPaused ? AppColors.purple : theme.textTheme.bodySmall?.color,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildRepsDisplay(Exercise exercise, Color color, ThemeData theme) {
-    if (!_hasStarted) {
-      return Column(
-        children: [
-          Text(
-            '0',
-            style: TextStyle(fontSize: 64, fontWeight: FontWeight.w800, color: color.withValues(alpha: 0.5)),
-          ),
-          Text(
-            'of ${exercise.defaultReps} reps',
-            style: TextStyle(fontSize: 14, color: theme.textTheme.bodySmall?.color),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Get Ready',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
-          ),
-        ],
-      );
-    }
+  Widget _buildHeroReps(Exercise exercise, Color color, ThemeData theme) {
+    final target = exercise.defaultReps ?? 0;
+    final isComplete = _repsCompleted >= target;
+    final repsColor = isComplete ? AppColors.green : color;
 
     return Column(
       children: [
+        // Elapsed time — small, above the counter
         Text(
-          '$_repsCompleted',
-          style: TextStyle(
-            fontSize: 64,
-            fontWeight: FontWeight.w800,
-            color: _repsCompleted >= exercise.defaultReps! ? AppColors.green : color,
+          _formatElapsed(_elapsedSeconds),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
+        ),
+        const SizedBox(height: 12),
+        // Big rep counter
+        SizedBox(
+          width: 180,
+          height: 180,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Progress ring
+              SizedBox(
+                width: 180,
+                height: 180,
+                child: CircularProgressIndicator(
+                  value: target > 0 ? (_repsCompleted / target).clamp(0.0, 1.0) : 0.0,
+                  strokeWidth: 10,
+                  backgroundColor: theme.dividerColor.withValues(alpha: 0.2),
+                  valueColor: AlwaysStoppedAnimation(
+                    _hasStarted ? repsColor : color.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$_repsCompleted',
+                    style: TextStyle(
+                      fontSize: 56,
+                      fontWeight: FontWeight.w800,
+                      color: _hasStarted ? repsColor : color.withValues(alpha: 0.5),
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isPaused
+                        ? 'PAUSED'
+                        : _hasStarted
+                            ? 'of $target reps'
+                            : 'of $target reps',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _isPaused
+                          ? AppColors.purple
+                          : _hasStarted
+                              ? theme.textTheme.bodySmall?.color
+                              : theme.textTheme.bodySmall?.color,
+                    ),
+                  ),
+                  if (!_hasStarted) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Get Ready',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: theme.textTheme.bodySmall?.color),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
-        Text(
-          'of ${exercise.defaultReps} reps',
-          style: TextStyle(fontSize: 14, color: theme.textTheme.bodySmall?.color),
-        ),
-        const SizedBox(height: 8),
-        if (_isPaused)
-          Text(
-            'PAUSED',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.purple),
-          ),
       ],
     );
   }
@@ -575,6 +650,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Reset
+          _buildControlButton(
+            icon: Icons.replay,
+            label: 'Reset',
+            color: Colors.orange,
+            onTap: _resetExercise,
+          ),
           // Pause/Resume
           _buildControlButton(
             icon: _isPaused ? Icons.play_arrow : Icons.pause,
@@ -606,7 +688,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               onTap: _skipExercise,
               large: true,
             ),
-          // Skip exercise
+          // Next
           _buildControlButton(
             icon: Icons.fast_forward,
             label: 'Next',

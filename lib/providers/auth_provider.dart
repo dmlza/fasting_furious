@@ -39,11 +39,11 @@ class ProfileNotifier extends StateNotifier<Profile?> {
       if (user != null) {
         final username = user.userMetadata?['username'] as String? ?? user.email?.split('@').first;
         final displayName = user.userMetadata?['display_name'] as String? ?? username;
-        await ref.read(supabaseServiceProvider).client.from('profiles').insert({
+        await ref.read(supabaseServiceProvider).client.from('profiles').upsert({
           'id': user.id,
           'username': username,
           'display_name': displayName,
-        });
+        }, onConflict: 'id');
         state = Profile(id: user.id, username: username, displayName: displayName);
       }
     }

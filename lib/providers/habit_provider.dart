@@ -13,6 +13,7 @@ class HabitState {
   final ActiveTimer? activeTimer;
   final List<String> gridLayout;
   final bool isEditingGrid;
+  final List<SmokingLog> smokingLog;
 
   HabitState({
     this.habits = const Habit(),
@@ -20,6 +21,7 @@ class HabitState {
     this.activeTimer,
     this.gridLayout = const ['fasting', 'no_sugar', 'exercise', 'no_smoking'],
     this.isEditingGrid = false,
+    this.smokingLog = const [],
   });
 
   HabitState copyWith({
@@ -28,6 +30,7 @@ class HabitState {
     ActiveTimer? activeTimer,
     List<String>? gridLayout,
     bool? isEditingGrid,
+    List<SmokingLog>? smokingLog,
   }) {
     return HabitState(
       habits: habits ?? this.habits,
@@ -35,20 +38,35 @@ class HabitState {
       activeTimer: activeTimer,
       gridLayout: gridLayout ?? this.gridLayout,
       isEditingGrid: isEditingGrid ?? this.isEditingGrid,
+      smokingLog: smokingLog ?? this.smokingLog,
     );
   }
 
   int getStreak(String habit) {
     if (history.isEmpty) return 0;
+    final sorted = List<HabitHistory>.from(history)..sort((a, b) => a.date.compareTo(b.date));
     int streak = 0;
-    for (int i = history.length - 1; i >= 0; i--) {
-      if (habit == 'exercise' && history[i].exercise) {
-        streak++;
-      } else if (habit == 'no_sugar' && history[i].noSugar) {
-        streak++;
-      } else if (habit == 'no_smoking' && history[i].noSmoking) {
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    for (int i = sorted.length - 1; i >= 0; i--) {
+      final entry = sorted[i];
+      bool completed;
+      switch (habit) {
+        case 'exercise':
+          completed = entry.exercise;
+          break;
+        case 'no_sugar':
+          completed = entry.noSugar;
+          break;
+        case 'no_smoking':
+          completed = entry.noSmoking;
+          break;
+        default:
+          return streak;
+      }
+      if (completed) {
         streak++;
       } else {
+        if (entry.date == today) continue;
         return streak;
       }
     }
@@ -93,6 +111,7 @@ class HabitNotifier extends StateNotifier<HabitState> {
       fetchHabits(userId),
       fetchHabitHistory(userId),
       fetchActiveTimer(userId),
+      fetchSmokingLog(userId),
     ]);
   }
 
@@ -121,7 +140,17 @@ class HabitNotifier extends StateNotifier<HabitState> {
 
   void setActiveTimer(ActiveTimer? timer) => state = state.copyWith(activeTimer: timer);
 
+  Future<void> fetchSmokingLog(String userId) async {
+    try {
+      final data = await ref.read(supabaseServiceProvider).fetchSmokingLog(userId, limitDays: 365);
+      state = state.copyWith(
+        smokingLog: data.map((d) => SmokingLog.fromMap(d)).toList(),
+      );
+    } catch (_) {}
+  }
+
   Future<bool> toggleHabit(String userId, String habit) async {
+    final previous = state.habits;
     final updated = Habit(
       exercise: habit == 'exercise' ? !state.habits.exercise : state.habits.exercise,
       noSugar: habit == 'no_sugar' ? !state.habits.noSugar : state.habits.noSugar,
@@ -140,7 +169,7 @@ class HabitNotifier extends StateNotifier<HabitState> {
       await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
       return true;
     } catch (_) {
-      state = state.copyWith(habits: state.habits);
+      state = state.copyWith(habits: previous);
       return false;
     }
   }

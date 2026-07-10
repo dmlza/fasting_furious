@@ -206,7 +206,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => setState(() => _editing = !_editing),
+                        onPressed: () {
+                      if (!_editing) {
+                        _nameController.text = profile?.displayName ?? '';
+                        _usernameController.text = profile?.username ?? '';
+                        _bioController.text = profile?.bio ?? '';
+                      }
+                      setState(() => _editing = !_editing);
+                    },
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: AppColors.border),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -337,17 +344,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               child: Column(
                 children: [
                   TextField(
-                    controller: _nameController..text = profile?.displayName ?? '',
+                    controller: _nameController,
                     decoration: const InputDecoration(hintText: 'Display Name'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    controller: _usernameController..text = profile?.username ?? '',
+                    controller: _usernameController,
                     decoration: const InputDecoration(hintText: 'Username'),
                   ),
                   const SizedBox(height: 12),
                   TextField(
-                    controller: _bioController..text = profile?.bio ?? '',
+                    controller: _bioController,
                     decoration: const InputDecoration(hintText: 'Bio'),
                     maxLines: 3,
                   ),
@@ -556,6 +563,66 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
                         const Text('Workout History', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                         Text(
                           'View past workouts and progress',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Seed demo accounts
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: InkWell(
+            onTap: () async {
+              try {
+                final svc = ref.read(supabaseServiceProvider);
+                await svc.resetSeedFlag();
+                await svc.ensureSeedAccounts();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Demo accounts created! Search for Eric or Ariel.')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.purple.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.person_add, color: AppColors.purple, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Seed Demo Accounts', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text(
+                          'Create Eric & Ariel profiles',
                           style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ],

@@ -1,9 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Demo account IDs — match sql/seed_data.sql
 const _seedUserIds = [
   'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', // Eric
   'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', // Ariel
+  'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', // Marcus
+  'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', // Priya
+  'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a55', // Jake
 ];
 
 class SupabaseConfig {
@@ -22,6 +26,10 @@ class SupabaseService {
   SupabaseService._();
 
   final client = Supabase.instance.client;
+
+  /// Set to true while seed accounts are being created to prevent
+  /// AuthGate from reacting to temporary sign-out/sign-in cycles.
+  bool isSeeding = false;
 
   User? get currentUser => client.auth.currentUser;
   Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
@@ -54,19 +62,27 @@ class SupabaseService {
     await client.from('workout_history').delete().eq('user_id', user.id);
     await client.from('profiles').delete().eq('id', user.id);
 
-    // Delete auth user (requires server-side function or RLS)
-    await client.auth.admin.deleteUser(user.id);
+    // Sign out — account deletion requires server-side function with service_role key
+    await client.auth.signOut();
   }
 
   Future<void> resetPassword(String email) {
     return client.auth.resetPasswordForEmail(email);
   }
 
-  /// Auto-friend new users with the demo accounts (Eric & Ariel)
-  /// so their feed has content immediately.
+  /// Auto-friend new users with the demo accounts so their feed has content immediately.
   Future<void> autoFriendSeedAccounts(String userId) async {
-    await _ensureSeedAccounts();
-    for (final seedId in _seedUserIds) {
+    await ensureSeedAccounts();
+
+    // Find seed users by username (works regardless of auth user IDs)
+    final seedProfiles = await client
+        .from('profiles')
+        .select('id')
+        .inFilter('username', ['eric_fasts', 'ariel_fit', 'marcus_run', 'priya_yoga', 'jake_gains']);
+
+    for (final profile in seedProfiles) {
+      final seedId = profile['id'] as String;
+      if (seedId == userId) continue;
       try {
         final existing = await client
             .from('friendships')
@@ -86,59 +102,108 @@ class SupabaseService {
 
   bool _seeded = false;
 
-  /// Creates Eric & Ariel accounts + sample data if they don't exist yet.
-  Future<void> _ensureSeedAccounts() async {
+  /// Reset the seed flag so seed accounts can be re-created.
+  Future<void> resetSeedFlag() async {
+    _seeded = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('ff_seeded');
+  }
+
+  /// Creates seed accounts + sample data if they don't exist yet.
+  /// Signs out after creation so the real user stays logged in.
+  Future<void> ensureSeedAccounts() async {
     if (_seeded) return;
+
+    // Check if we've already seeded before (even if accounts were deleted)
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('ff_seeded') == true) {
+      _seeded = true;
+      return;
+    }
+
     try {
-      // Check if Eric already exists
+      // Check if seed accounts already exist by username
       final existing = await client
           .from('profiles')
           .select('id')
-          .eq('id', _seedUserIds[0])
-          .maybeSingle();
-      if (existing != null) {
+          .inFilter('username', ['eric_fasts', 'ariel_fit', 'marcus_run', 'priya_yoga', 'jake_gains'])
+          .limit(1);
+      if (existing.isNotEmpty) {
         _seeded = true;
+        await prefs.setBool('ff_seeded', true);
         return;
       }
 
-      // Create Eric
-      final ericRes = await client.auth.signUp(
-        email: 'eric@fastingfurious.demo',
-        password: 'demo123456',
-        data: {'username': 'eric_fasts', 'display_name': 'Eric Torres'},
-      );
-      if (ericRes.user != null) {
-        await client.from('profiles').upsert({
-          'id': _seedUserIds[0],
-          'username': 'eric_fasts',
-          'display_name': 'Eric Torres',
-          'bio': '16:8 warrior. Down 15lbs in 2 months. Coffee before noon only.',
-        });
+      isSeeding = true;
+
+      // Save current session
+      final currentRefreshToken = client.auth.currentSession?.refreshToken;
+      final currentUserId = client.auth.currentUser?.id;
+
+      final seedAccounts = [
+        ('eric@fastingfurious.demo', 'eric_fasts', 'Eric Torres', '16:8 warrior. Down 15lbs in 2 months. Coffee before noon only.'),
+        ('ariel@fastingfurious.demo', 'ariel_fit', 'Ariel Chen', 'Fitness coach. 20:4 OMAD. Runner. Plant-based.'),
+        ('marcus@fastingfurious.demo', 'marcus_run', 'Marcus Webb', 'Marathon runner. 18:6 IF. Chasing a sub-3hr marathon.'),
+        ('priya@fastingfurious.demo', 'priya_yoga', 'Priya Sharma', 'Yoga teacher. 16:8. Mindfulness + fasting = clarity.'),
+        ('jake@fastingfurious.demo', 'jake_gains', 'Jake Morrison', 'New to fasting. Day 12. 50lbs to lose. Let\'s go.'),
+      ];
+
+      final createdIds = <String>[];
+
+      for (final (email, username, displayName, bio) in seedAccounts) {
+        try {
+          final result = await client.auth.signUp(
+            email: email,
+            password: 'demo123456',
+            data: {'username': username, 'display_name': displayName},
+          );
+          // Use the ID from the signUp response, not currentUser (which may not be set if email confirmation is required)
+          final id = result.user?.id;
+          if (id != null) {
+            await client.from('profiles').upsert({
+              'id': id,
+              'username': username,
+              'display_name': displayName,
+              'bio': bio,
+            });
+            createdIds.add(id);
+          }
+          // Sign out regardless
+          await client.auth.signOut();
+        } catch (_) {
+          try { await client.auth.signOut(); } catch (_) {}
+        }
       }
 
-      // Create Ariel
-      final arielRes = await client.auth.signUp(
-        email: 'ariel@fastingfurious.demo',
-        password: 'demo123456',
-        data: {'username': 'ariel_fit', 'display_name': 'Ariel Chen'},
-      );
-      if (arielRes.user != null) {
-        await client.from('profiles').upsert({
-          'id': _seedUserIds[1],
-          'username': 'ariel_fit',
-          'display_name': 'Ariel Chen',
-          'bio': 'Fitness coach. 20:4 OMAD. Runner. Plant-based.',
-        });
+      // Restore original user's session
+      if (currentRefreshToken != null && currentUserId != null) {
+        try {
+          await client.auth.setSession(currentRefreshToken);
+        } catch (_) {}
       }
 
-      // Seed posts for Eric
-      final ericId = ericRes.user?.id ?? _seedUserIds[0];
-      final arielId = arielRes.user?.id ?? _seedUserIds[1];
+      // If we couldn't get real IDs, fall back to hardcoded ones
+      final ericId = createdIds.isNotEmpty ? createdIds[0] : _seedUserIds[0];
+      final arielId = createdIds.length > 1 ? createdIds[1] : _seedUserIds[1];
+      final marcusId = createdIds.length > 2 ? createdIds[2] : _seedUserIds[2];
+      final priyaId = createdIds.length > 3 ? createdIds[3] : _seedUserIds[3];
+      final jakeId = createdIds.length > 4 ? createdIds[4] : _seedUserIds[4];
 
       await client.from('posts').insert([
         {'user_id': ericId, 'type': 'fasting_complete', 'content': 'Completed a 16:8 fast! Feeling unstoppable.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
-        {'user_id': ericId, 'type': 'exercise', 'content': 'Crushing 30min of chest and triceps today', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
-        {'user_id': ericId, 'type': 'general', 'content': 'Day 45 of my fasting journey. Down 15lbs total. The energy is unreal.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+        {'user_id': ericId, 'type': 'exercise', 'content': 'Crushing 30min of chest and triceps today', 'created_at': DateTime.now().subtract(const Duration(hours: 8)).toIso8601String()},
+        {'user_id': ericId, 'type': 'fasting', 'content': 'Hour 14 of my 16:8. The hunger waves come and go. Black coffee helps.', 'created_at': DateTime.now().subtract(const Duration(hours: 14)).toIso8601String()},
+        {'user_id': ericId, 'type': 'general', 'content': 'Day 45 of my fasting journey. Down 15lbs total. The energy is unreal.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': ericId, 'type': 'workout_complete', 'content': 'Leg day done. Squats, lunges, and calf raises. Walking tomorrow will be interesting.', 'created_at': DateTime.now().subtract(const Duration(days: 1, hours: 6)).toIso8601String()},
+        {'user_id': ericId, 'type': 'fasting_complete', 'content': '18:6 today. Extended an extra 2 hours. Surprisingly manageable.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+        {'user_id': ericId, 'type': 'exercise', 'content': 'Morning 5K run. New personal best: 23:42. The fasting clarity is real.', 'created_at': DateTime.now().subtract(const Duration(days: 2, hours: 10)).toIso8601String()},
+        {'user_id': ericId, 'type': 'general', 'content': 'No sugar for 30 days. Had to stare down a birthday cake today. Stayed strong.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+        {'user_id': ericId, 'type': 'fasting_complete', 'content': '16:8 complete. Broke fast with grilled chicken and avocado.', 'created_at': DateTime.now().subtract(const Duration(days: 3, hours: 4)).toIso8601String()},
+        {'user_id': ericId, 'type': 'workout_complete', 'content': 'Push day: bench press, overhead press, tricep dips. 45min total.', 'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String()},
+        {'user_id': ericId, 'type': 'general', 'content': 'Sleep quality since fasting started: from 5hrs to 7.5hrs. Game changer.', 'created_at': DateTime.now().subtract(const Duration(days: 5)).toIso8601String()},
+        {'user_id': ericId, 'type': 'fasting', 'content': 'Starting a 24hr fast. Wish me luck. Water and electrolytes only.', 'created_at': DateTime.now().subtract(const Duration(days: 5, hours: 8)).toIso8601String()},
+        {'user_id': ericId, 'type': 'exercise', 'content': 'Pull day: deadlifts, rows, bicep curls. Back is feeling strong.', 'created_at': DateTime.now().subtract(const Duration(days: 6)).toIso8601String()},
+        {'user_id': ericId, 'type': 'fasting_complete', 'content': '24hr fast complete! First one ever. Refeeding carefully tonight.', 'created_at': DateTime.now().subtract(const Duration(days: 6, hours: 4)).toIso8601String()},
       ]);
 
       // Seed posts for Ariel
@@ -148,6 +213,39 @@ class SupabaseService {
         {'user_id': arielId, 'type': 'exercise', 'content': 'Morning run done before sunrise. 5K in 24min.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
         {'user_id': arielId, 'type': 'general', 'content': 'Week 3 of 20:4. Sleep has improved dramatically. No more 2am wakes.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
         {'user_id': arielId, 'type': 'fasting', 'content': 'Currently fasting. 14 hours in. Black coffee is keeping me going.', 'created_at': DateTime.now().subtract(const Duration(hours: 6)).toIso8601String()},
+      ]);
+
+      // Seed posts for Marcus
+      await client.from('posts').insert([
+        {'user_id': marcusId, 'type': 'exercise', 'content': '10K tempo run this morning. Negative splits the whole way. Fasted running hits different.', 'created_at': DateTime.now().subtract(const Duration(hours: 4)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'fasting_complete', 'content': '18:6 done. Refueled with oatmeal and banana. Ready for tomorrow\'s long run.', 'created_at': DateTime.now().subtract(const Duration(hours: 10)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'general', 'content': 'Race day in 3 weeks. Peak training week. 60 miles scheduled. Fasting is keeping my energy stable.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'workout_complete', 'content': 'Hill repeats x8. Quads are screaming. Worth it.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'fasting', 'content': 'Hour 16 of 18. The last 2 hours are always the mental game.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'exercise', 'content': 'Easy recovery run. 5K at conversational pace. Legs still sore from yesterday.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'general', 'content': 'PR on my 5K: 19:47. Under 20 min for the first time! Fasting + consistent training = results.', 'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String()},
+      ]);
+
+      // Seed posts for Priya
+      await client.from('posts').insert([
+        {'user_id': priyaId, 'type': 'general', 'content': 'Morning meditation + 16:8 fasting. My mind has never been this clear. 60 days in.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'exercise', 'content': '90min vinyasa flow. Balance and focus are on another level since I started fasting.', 'created_at': DateTime.now().subtract(const Duration(hours: 8)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'fasting_complete', 'content': '16:8 complete. Broke fast with a smoothie bowl. Nourish to flourish.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'general', 'content': 'Teaching my first class since starting IF. Students noticed the change in my energy. Sharing the practice.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'fasting', 'content': 'Hour 12. Deep breathing through the hunger. It\'s just a wave. It passes.', 'created_at': DateTime.now().subtract(const Duration(hours: 4)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'general', 'content': 'Day 60 no sugar. My skin is glowing. Cravings are gone. This is freedom.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+      ]);
+
+      // Seed posts for Jake
+      await client.from('posts').insert([
+        {'user_id': jakeId, 'type': 'general', 'content': 'Day 12 of 16:8. Down 6lbs already. First week was brutal. Now it\'s routine.', 'created_at': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'exercise', 'content': 'Walked 10K steps today. Not much but for a 280lb guy, it\'s a start.', 'created_at': DateTime.now().subtract(const Duration(hours: 7)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'fasting_complete', 'content': '16:8 done! Meal prepped for the week. Chicken, rice, broccoli. Simple.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'general', 'content': 'My doctor said keep going. Blood pressure already improving. This is why I\'m doing this.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'fasting', 'content': 'Hour 14. Hungry but determined. 50lbs to go. One day at a time.', 'created_at': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'exercise', 'content': 'First time in a gym in 2 years. Just did machines. Felt good to be back.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'general', 'content': 'My wife started fasting too. Couple goals. Accountability is everything.', 'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'general', 'content': 'Scale said 274 this morning. Started at 280. 6lbs down. Small wins.', 'created_at': DateTime.now().subtract(const Duration(days: 5)).toIso8601String()},
       ]);
 
       // Seed habits for last 7 days
@@ -173,10 +271,45 @@ class SupabaseService {
           'exercise_minutes': 45 + (i * 7) % 15,
           'fasting_hours': i % 3 == 0 ? 18 : 20,
         }, onConflict: 'user_id,date');
+
+        // Marcus — runner, consistent exercise
+        await client.from('habits').upsert({
+          'user_id': marcusId,
+          'date': date,
+          'exercise': true,
+          'no_sugar': i >= 1,
+          'no_smoking': true,
+          'exercise_minutes': 40 + (i * 3) % 25,
+          'fasting_hours': 18,
+        }, onConflict: 'user_id,date');
+
+        // Priya — yoga teacher, very consistent
+        await client.from('habits').upsert({
+          'user_id': priyaId,
+          'date': date,
+          'exercise': true,
+          'no_sugar': true,
+          'no_smoking': true,
+          'exercise_minutes': 60 + (i * 5) % 20,
+          'fasting_hours': 16,
+        }, onConflict: 'user_id,date');
+
+        // Jake — new to this, still building habits
+        await client.from('habits').upsert({
+          'user_id': jakeId,
+          'date': date,
+          'exercise': i % 2 == 0,
+          'no_sugar': i >= 3,
+          'no_smoking': true,
+          'exercise_minutes': i % 2 == 0 ? 20 + (i * 5) % 15 : 0,
+          'fasting_hours': i >= 1 ? 16 : 14,
+        }, onConflict: 'user_id,date');
       }
 
       _seeded = true;
+      await prefs.setBool('ff_seeded', true);
     } catch (_) {}
+    isSeeding = false;
   }
 
   // Profiles
@@ -197,12 +330,15 @@ class SupabaseService {
     }).eq('id', userId);
   }
 
-  Future<List<Map<String, dynamic>>> searchUsers(String query) async {
-    final data = await client
+  Future<List<Map<String, dynamic>>> searchUsers(String query, {String? excludeUserId}) async {
+    var queryBuilder = client
         .from('profiles')
         .select('id, username, display_name')
-        .ilike('username', '%$query%')
-        .limit(10);
+        .ilike('username', '%$query%');
+    if (excludeUserId != null) {
+      queryBuilder = queryBuilder.neq('id', excludeUserId);
+    }
+    final data = await queryBuilder.limit(10);
     return List<Map<String, dynamic>>.from(data);
   }
 
@@ -426,6 +562,32 @@ class SupabaseService {
         .order('created_at', ascending: false)
         .limit(limit);
     return List<Map<String, dynamic>>.from(data);
+  }
+
+  // Smoking Log
+  Future<void> saveSmokingLog(String userId, {required String date, required int cigarettes, String? trigger, int? cravingIntensity}) {
+    return client.from('smoking_log').upsert({
+      'user_id': userId,
+      'date': date,
+      'cigarettes': cigarettes,
+      if (trigger != null) 'trigger': trigger,
+      if (cravingIntensity != null) 'craving_intensity': cravingIntensity,
+    }, onConflict: 'user_id,date');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchSmokingLog(String userId, {int limitDays = 90}) async {
+    final start = DateTime.now().subtract(Duration(days: limitDays));
+    final data = await client
+        .from('smoking_log')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', start.toIso8601String().split('T')[0])
+        .order('date', ascending: true);
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  Future<void> deleteSmokingLog(String userId, String date) {
+    return client.from('smoking_log').delete().eq('user_id', userId).eq('date', date);
   }
 
   // Realtime

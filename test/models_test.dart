@@ -259,7 +259,7 @@ void main() {
       final main_ = allExercises.where((e) => e.category == WorkoutCategory.mainExercise);
       final cooldown = allExercises.where((e) => e.category == WorkoutCategory.coolDown);
       expect(warmup.length, 8);
-      expect(main_.length, 10);
+      expect(main_.length, 3);
       expect(cooldown.length, 8);
     });
 

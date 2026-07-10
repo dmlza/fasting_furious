@@ -27,16 +27,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAuth();
-    });
-  }
-
-  void _checkAuth() {
-    ref.listen(authStateProvider, (prev, next) {
-      next.whenData((state) {
-        if (state.session?.user != null && mounted) {
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        }
+      ref.listen(authStateProvider, (prev, next) {
+        next.whenData((state) {
+          if (state.session?.user != null && mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
       });
     });
   }

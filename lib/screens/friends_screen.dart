@@ -7,6 +7,7 @@ import '../providers/auth_provider.dart';
 import '../providers/friends_provider.dart';
 import '../models/models.dart';
 import '../widgets/skeleton.dart';
+import 'public_profile_screen.dart';
 
 
 class FriendsScreen extends ConsumerStatefulWidget {
@@ -56,7 +57,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
     setState(() => _searchLoading = true);
     _searchDebounce = Timer(const Duration(milliseconds: 400), () async {
       try {
-        final results = await ref.read(supabaseServiceProvider).searchUsers(query.trim());
+        final results = await ref.read(supabaseServiceProvider).searchUsers(query.trim(), excludeUserId: ref.read(currentUserProvider)?.id);
         if (mounted) {
           setState(() {
             _searchResults = results.map((r) => Profile.fromMap(r)).toList();
@@ -226,62 +227,44 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
     final theme = Theme.of(context);
     final user = ref.read(currentUserProvider);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppColors.purple.withValues(alpha: 0.12),
-            child: Text(r.initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w600, fontSize: 14)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(r.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                Text(
-                  '@${r.username ?? 'unknown'}',
-                  style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PublicProfileScreen(
+              userId: r.id,
+              username: r.username,
+              displayName: r.displayName,
             ),
           ),
-          if (r.id != user?.id)
-            IconButton(
-              onPressed: () async {
-                if (user == null) return;
-                try {
-                  await ref.read(supabaseServiceProvider).sendFriendRequest(user.id, r.id);
-                  await ref.read(supabaseServiceProvider).sendNotification(
-                    r.id, user.id, 'friend_request', '${ref.read(profileProvider)?.displayName ?? 'Someone'} sent you a friend request',
-                  );
-                  setState(() => _searchResults = []);
-                  _searchController.clear();
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Friend request sent to ${r.name}!')),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Failed to send request. Please try again.')),
-                    );
-                  }
-                }
-              },
-              icon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.person_add, color: AppColors.purple, size: 18),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.purple.withValues(alpha: 0.12),
+              child: Text(r.initial, style: const TextStyle(color: AppColors.purple, fontWeight: FontWeight.w600, fontSize: 14)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(
+                    '@${r.username ?? 'unknown'}',
+                    style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+                  ),
+                ],
               ),
             ),
-        ],
+            if (r.id != user?.id)
+              Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+          ],
+        ),
       ),
     );
   }

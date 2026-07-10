@@ -11,6 +11,8 @@ import '../widgets/fasting_timer_ring.dart';
 import '../widgets/health_recovery_timeline.dart';
 import '../widgets/metabolic_dashboard.dart';
 import 'workout_setup_screen.dart';
+import 'sugar_detail_screen.dart';
+import 'no_smoke_screen.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,
@@ -321,7 +323,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     final streak = state.getStreak('no_sugar');
 
     return GestureDetector(
-      onTap: () => _showSugarMilestones(state),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SugarDetailScreen())),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -417,10 +419,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
   Widget _buildSmokingBentoTile(HabitState state, bool isDark) {
     final streak = state.getStreak('no_smoking');
-    final timeSinceQuit = Duration(days: streak);
+    final isCheckedToday = state.habits.noSmoking;
 
     return GestureDetector(
-      onTap: () => _showHealthTimeline(timeSinceQuit),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const NoSmokeScreen()),
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -469,57 +473,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
                     ],
                   ),
                 ),
-                Switch(
-                  value: state.habits.noSmoking,
-                  activeThumbColor: AppColors.green,
-                  onChanged: (_) {
-                    final user = ref.read(currentUserProvider);
-                    if (user != null) ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
-                  },
-                ),
+                if (isCheckedToday)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check, size: 14, color: AppColors.green),
+                        const SizedBox(width: 4),
+                        Text('Done', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green)),
+                      ],
+                    ),
+                  )
+                else
+                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.grey),
               ],
             ),
             const SizedBox(height: 12),
-            HealthRecoveryTimeline(
-              timeSinceQuit: timeSinceQuit,
-              compact: true,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  'View Timeline',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.grey),
-                ),
-                const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.grey),
-              ],
-            ),
+            // Progress bar to next milestone
+            _buildNextMilestoneProgress(streak, isDark),
           ],
         ),
       ),
     );
   }
 
-  void _showHealthTimeline(Duration timeSinceQuit) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (ctx, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: HealthRecoveryTimeline(
-            timeSinceQuit: timeSinceQuit,
-            compact: false,
-          ),
+  Widget _buildNextMilestoneProgress(int streak, bool isDark) {
+    final timeSinceQuit = Duration(days: streak);
+    final milestones = [
+      const Duration(minutes: 20),
+      const Duration(hours: 24),
+      const Duration(hours: 48),
+      const Duration(days: 3),
+      const Duration(days: 7),
+      const Duration(days: 14),
+      const Duration(days: 30),
+      const Duration(days: 365),
+    ];
+
+    Duration? nextMilestone;
+    for (final m in milestones) {
+      if (timeSinceQuit < m) {
+        nextMilestone = m;
+        break;
+      }
+    }
+
+    if (nextMilestone == null) {
+      return Text(
+        'All milestones achieved!',
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.green),
+      );
+    }
+
+    final progress = timeSinceQuit.inSeconds / nextMilestone.inSeconds;
+    final remaining = nextMilestone - timeSinceQuit;
+    final remainingText = remaining.inDays > 0
+        ? '${remaining.inDays}d left'
+        : remaining.inHours > 0
+            ? '${remaining.inHours}h left'
+            : '${remaining.inMinutes}m left';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Next milestone',
+              style: TextStyle(fontSize: 11, color: AppColors.grey),
+            ),
+            Text(
+              remainingText,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.grey),
+            ),
+          ],
         ),
-      ),
+        const SizedBox(height: 4),
+        LinearProgressIndicator(
+          value: progress.clamp(0.0, 1.0),
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : AppColors.greyLight.withValues(alpha: 0.5),
+          valueColor: AlwaysStoppedAnimation(AppColors.green),
+          borderRadius: BorderRadius.circular(2),
+          minHeight: 4,
+        ),
+      ],
     );
   }
 
@@ -546,64 +591,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     );
   }
 
-  void _showSugarMilestones(HabitState state) {
-    final streak = state.getStreak('no_sugar');
-    final milestones = [
-      _MilestoneData('\u26A1', 'The Withdrawal Phase', 'Days 1-3 - Cravings peak, energy dips', 1, 3, streak),
-      _MilestoneData('\u2696\uFE0F', 'Stabilization', 'Days 4-7 - Blood sugar normalizes', 4, 7, streak),
-      _MilestoneData('\u2728', 'The Gut & Skin Glow', 'Days 8-14 - Digestion improves, skin clears', 8, 14, streak),
-      _MilestoneData('\u{1F525}', 'Fat Burning & Habit Shift', 'Days 15-30 - Deep metabolic adaptation', 15, 30, streak),
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('\u{1F9EA} No Sugar Milestone Roadmap', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 20),
-            ...milestones.map((m) {
-              final completed = m.current >= m.end;
-              final active = m.current >= m.start && m.current < m.end;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: completed
-                      ? AppColors.purple.withValues(alpha: 0.08)
-                      : active
-                          ? AppColors.purple.withValues(alpha: 0.04)
-                          : Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: active ? Border.all(color: AppColors.purple, width: 1.5) : null,
-                ),
-                child: Row(
-                  children: [
-                    Text(m.icon, style: const TextStyle(fontSize: 22)),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(m.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          Text(m.desc, style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color)),
-                        ],
-                      ),
-                    ),
-                    Text(completed ? '\u2705' : '\u{1F512}', style: const TextStyle(fontSize: 14)),
-                  ],
-                ),
-              );
-            }),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showExerciseModal() {
     showModalBottomSheet(
@@ -720,10 +707,4 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
       ),
     );
   }
-}
-
-class _MilestoneData {
-  final String icon, label, desc;
-  final int start, end, current;
-  const _MilestoneData(this.icon, this.label, this.desc, this.start, this.end, this.current);
 }

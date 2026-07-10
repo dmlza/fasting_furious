@@ -445,7 +445,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   List<_PostStat> _parseStats(String content) {
     final stats = <_PostStat>[];
     if (content.contains('smoke-free')) {
-      final match = RegExp(r'(\d+) day').firstMatch(content);
+      final match = RegExp(r'(\d+) day.*smoke-free').firstMatch(content);
       final days = match != null ? int.tryParse(match.group(1)!) ?? 0 : 0;
       stats.add(_PostStat(
         emoji: '\u{1F6AB}',
@@ -456,7 +456,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       ));
     }
     if (content.contains('sugar-free')) {
-      final match = RegExp(r'(\d+) day').firstMatch(content);
+      final match = RegExp(r'(\d+) day.*sugar-free').firstMatch(content);
       final days = match != null ? int.tryParse(match.group(1)!) ?? 0 : 0;
       stats.add(_PostStat(
         emoji: '\u{1F525}',
@@ -496,7 +496,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         content: Text('Head to Home to ${(stat.actionLabel ?? 'get started').toLowerCase()}!'),
         action: SnackBarAction(
           label: 'Home',
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
         ),
       ),
     );

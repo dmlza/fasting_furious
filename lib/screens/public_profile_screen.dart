@@ -174,26 +174,28 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                           SizedBox(
                             width: 200,
                             height: 38,
-                            child: OutlinedButton.icon(
-                              onPressed: _toggleFriend,
-                              icon: Icon(
-                                _isFriend ? Icons.check : _requestSent ? Icons.hourglass_empty : Icons.person_add,
-                                size: 16,
-                                color: _isFriend ? AppColors.green : AppColors.purple,
-                              ),
-                              label: Text(
-                                _isFriend ? 'Friends' : _requestSent ? 'Requested' : 'Add Friend',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: _isFriend ? AppColors.green : AppColors.purple,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: _isFriend ? AppColors.green : AppColors.purple),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                            ),
+                            child: _isFriend
+                                ? OutlinedButton.icon(
+                                    onPressed: _toggleFriend,
+                                    icon: const Icon(Icons.check, size: 16, color: AppColors.green),
+                                    label: const Text('Friends', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.green)),
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(color: AppColors.green),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                  )
+                                : ElevatedButton.icon(
+                                    onPressed: _toggleFriend,
+                                    icon: Icon(_requestSent ? Icons.hourglass_empty : Icons.person_add, size: 16, color: Colors.white),
+                                    label: Text(
+                                      _requestSent ? 'Requested' : 'Follow',
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.purple,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                  ),
                           ),
                       ],
                     ),

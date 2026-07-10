@@ -105,7 +105,7 @@ class AppTheme {
         primary: AppColors.purple,
         secondary: AppColors.green,
         surface: AppColors.white,
-        error: AppColors.green,
+        error: const Color(0xFFE53935),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.white,

@@ -24,7 +24,11 @@ class Profile {
     };
   }
 
-  String get initial => (displayName ?? username ?? '?')[0].toUpperCase();
+  String get initial {
+    final name = displayName ?? username ?? '';
+    if (name.isEmpty) return '?';
+    return name[0].toUpperCase();
+  }
   String get name => displayName ?? username ?? 'Anonymous';
 }
 
@@ -211,6 +215,33 @@ class Reaction {
       userId: map['user_id'] as String,
       postId: map['post_id'] as String,
       emoji: map['emoji'] as String? ?? '\u{1F525}',
+    );
+  }
+}
+
+class SmokingLog {
+  final String date;
+  final int cigarettes;
+  final String? trigger;
+  final int? cravingIntensity;
+
+  SmokingLog({
+    required this.date,
+    required this.cigarettes,
+    this.trigger,
+    this.cravingIntensity,
+  });
+
+  bool get isSmokeFree => cigarettes == 0;
+  bool get isSlip => cigarettes > 0 && cigarettes <= 2;
+  bool get isRelapse => cigarettes > 2;
+
+  factory SmokingLog.fromMap(Map<String, dynamic> map) {
+    return SmokingLog(
+      date: map['date'] as String,
+      cigarettes: map['cigarettes'] as int? ?? 0,
+      trigger: map['trigger'] as String?,
+      cravingIntensity: map['craving_intensity'] as int?,
     );
   }
 }
