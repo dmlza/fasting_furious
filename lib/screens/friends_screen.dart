@@ -77,10 +77,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.menu_rounded),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-        ),
         title: const Text(
           'Friends',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),

@@ -174,6 +174,31 @@ class HabitNotifier extends StateNotifier<HabitState> {
     }
   }
 
+  Future<bool> setHabit(String userId, String habit, bool value) async {
+    final previous = state.habits;
+    final updated = Habit(
+      exercise: habit == 'exercise' ? value : state.habits.exercise,
+      noSugar: habit == 'no_sugar' ? value : state.habits.noSugar,
+      noSmoking: habit == 'no_smoking' ? value : state.habits.noSmoking,
+      exerciseMinutes: state.habits.exerciseMinutes,
+    );
+    state = state.copyWith(habits: updated);
+
+    try {
+      final upsertData = {
+        'user_id': userId,
+        'date': _today,
+        habit: value,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+      await ref.read(supabaseServiceProvider).upsertHabit(upsertData);
+      return true;
+    } catch (_) {
+      state = state.copyWith(habits: previous);
+      return false;
+    }
+  }
+
   Future<bool> logExerciseMinutes(String userId, int minutes) async {
     final total = state.habits.exerciseMinutes + minutes;
     state = state.copyWith(

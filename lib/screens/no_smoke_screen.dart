@@ -697,7 +697,7 @@ class _NoSmokeScreenState extends ConsumerState<NoSmokeScreen> {
           await ref.read(supabaseServiceProvider).saveSmokingLog(user.id, date: dateStr, cigarettes: 0);
           // Update habits table too if it's today
           if (isToday) {
-            await ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
+            await ref.read(habitProvider.notifier).setHabit(user.id, 'no_smoking', true);
           }
           await ref.read(habitProvider.notifier).fetchSmokingLog(user.id);
           if (mounted) {
@@ -730,7 +730,7 @@ class _NoSmokeScreenState extends ConsumerState<NoSmokeScreen> {
     );
   }
 
-  void _doSmokeFreeCheckIn() async {
+  Future<void> _doSmokeFreeCheckIn() async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
     HapticFeedback.heavyImpact();
@@ -739,8 +739,8 @@ class _NoSmokeScreenState extends ConsumerState<NoSmokeScreen> {
     // Save to smoking log
     await ref.read(supabaseServiceProvider).saveSmokingLog(user.id, date: today, cigarettes: 0);
 
-    // Toggle habit
-    await ref.read(habitProvider.notifier).toggleHabit(user.id, 'no_smoking');
+    // Set habit to smoke-free (not toggle, to avoid flipping off if already on)
+    await ref.read(habitProvider.notifier).setHabit(user.id, 'no_smoking', true);
     await ref.read(habitProvider.notifier).fetchSmokingLog(user.id);
 
     if (mounted) {
@@ -750,7 +750,7 @@ class _NoSmokeScreenState extends ConsumerState<NoSmokeScreen> {
     }
   }
 
-  void _doSmokedCheckIn(int cigarettes, String? trigger, int? craving) async {
+  Future<void> _doSmokedCheckIn(int cigarettes, String? trigger, int? craving) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
     HapticFeedback.mediumImpact();
