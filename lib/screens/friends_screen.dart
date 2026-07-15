@@ -353,6 +353,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 ElevatedButton(
                   onPressed: () async {
@@ -421,6 +422,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> with SingleTicker
             ),
             trailing: IconButton(
               icon: const Icon(Icons.close, color: AppColors.green, size: 20),
+              alignment: Alignment.center,
               onPressed: () async {
                 await ref.read(friendsProvider.notifier).cancelRequest(s['id']);
                 _load();
