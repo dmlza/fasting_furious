@@ -2,16 +2,16 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../providers/feed_provider.dart';
-import '../providers/notifications_provider.dart';
-import '../models/models.dart';
-import '../widgets/skeleton.dart';
-import 'activity_detail_screen.dart';
-import 'public_profile_screen.dart';
-import 'notifications_screen.dart';
-import '../config/page_transitions.dart';
+import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/feed_provider.dart';
+import '../../providers/notifications_provider.dart';
+import '../../models/models.dart';
+import '../../widgets/skeleton.dart';
+import '../workouts/activity_detail_screen.dart';
+import '../profile/public_profile_screen.dart';
+import '../social/notifications_screen.dart';
+import '../../config/page_transitions.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
 

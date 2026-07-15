@@ -1,25 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'colors.dart';
+import 'glass_theme.dart';
 
-class AppColors {
-  static const purple = Color(0xFF6C5CE7);
-  static const purpleLight = Color(0xFF8E7CF0);
-  static const purpleDark = Color(0xFF5244C2);
-  static const green = Color(0xFF4CAF82);
-  static const greenLight = Color(0xFF6FC49D);
-  static const black = Color(0xFF1A1A2E);
-  static const grey = Color(0xFF8E8EA0);
-  static const greyLight = Color(0xFFE0E0E6);
-  static const white = Color(0xFFF7F7FA);
-  static const whitePure = Color(0xFFFFFFFF);
-
-  static const textPrimary = Color(0xFF1A1A2E);
-  static const textSecondary = Color(0xFF8E8EA0);
-  static const textTertiary = Color(0xFFB0B0C0);
-  static const surface = Color(0xFFF2F2F7);
-  static const border = Color(0xFFE8E8ED);
-}
+export 'colors.dart';
+export 'dimens.dart';
+export 'glass_theme.dart';
 
 class AppGradients {
   static const purpleGradient = LinearGradient(
@@ -103,9 +89,13 @@ class AppTheme {
       textTheme: textTheme,
       colorScheme: ColorScheme.light(
         primary: AppColors.purple,
+        onPrimary: Colors.white,
         secondary: AppColors.green,
+        onSecondary: Colors.white,
         surface: AppColors.white,
+        onSurface: AppColors.black,
         error: const Color(0xFFE53935),
+        onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.white,
@@ -179,6 +169,7 @@ class AppTheme {
         backgroundColor: AppColors.black,
         contentTextStyle: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
       ),
+      extensions: [GlassTheme.light],
     );
   }
 
@@ -191,9 +182,13 @@ class AppTheme {
       textTheme: textTheme,
       colorScheme: ColorScheme.dark(
         primary: AppColors.purpleLight,
+        onPrimary: Colors.white,
         secondary: AppColors.green,
+        onSecondary: Colors.white,
         surface: const Color(0xFF161B22),
+        onSurface: Colors.white,
         error: const Color(0xFFFB7185),
+        onError: AppColors.black,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: const Color(0xFF0D1117),
@@ -267,48 +262,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         contentTextStyle: GoogleFonts.poppins(color: AppColors.black, fontSize: 13),
       ),
-    );
-  }
-}
-
-class GlassWidget extends StatelessWidget {
-  final Widget child;
-  final double blur;
-  final double opacity;
-  final double radius;
-  final EdgeInsets? padding;
-  final EdgeInsets? margin;
-
-  const GlassWidget({
-    super.key,
-    required this.child,
-    this.blur = 10,
-    this.opacity = 0.15,
-    this.radius = 24,
-    this.padding,
-    this.margin,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          padding: padding,
-          margin: margin,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: opacity),
-            borderRadius: BorderRadius.circular(radius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: child,
-        ),
-      ),
+      extensions: [GlassTheme.dark],
     );
   }
 }

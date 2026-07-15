@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../providers/notifications_provider.dart';
-import '../models/models.dart';
-import 'public_profile_screen.dart';
+import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/notifications_provider.dart';
+import '../../models/models.dart';
+import '../profile/public_profile_screen.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});

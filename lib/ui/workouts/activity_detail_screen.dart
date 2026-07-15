@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../providers/feed_provider.dart';
-import '../models/models.dart';
-import 'public_profile_screen.dart';
+import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/feed_provider.dart';
+import '../../models/models.dart';
+import '../profile/public_profile_screen.dart';
 
 const _emojis = ['\u{1F525}', '\u{1F64C}', '\u{1F4AF}', '\u{1F44F}', '\u{1F4AA}'];
 

@@ -1,16 +1,16 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../models/models.dart';
-import '../providers/auth_provider.dart';
-import '../providers/habit_provider.dart';
-import '../providers/theme_provider.dart';
-import '../providers/friends_provider.dart';
-import '../widgets/skeleton.dart';
-import 'workout_history_screen.dart';
-import 'activity_detail_screen.dart';
-import '../config/page_transitions.dart';
+import '../../config/theme.dart';
+import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/habit_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/friends_provider.dart';
+import '../../widgets/skeleton.dart';
+import '../workouts/workout_history_screen.dart';
+import '../workouts/activity_detail_screen.dart';
+import '../../config/page_transitions.dart';
 
 
 class ProfileScreen extends ConsumerStatefulWidget {

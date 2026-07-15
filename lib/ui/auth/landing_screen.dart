@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../config/theme.dart';
+import "../../config/theme.dart";
 
 class LandingScreen extends StatelessWidget {
   final VoidCallback onGetStarted;

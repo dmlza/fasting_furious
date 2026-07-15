@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../providers/habit_provider.dart';
-import '../models/models.dart';
-import '../widgets/health_recovery_timeline.dart';
+import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/habit_provider.dart';
+import '../../models/models.dart';
+import '../../widgets/health_recovery_timeline.dart';
 
 const _triggers = [
   ('Stress', '\u{1F6CB}\uFE0F'),

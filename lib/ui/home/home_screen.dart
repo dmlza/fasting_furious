@@ -3,17 +3,17 @@ import 'dart:math';
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../providers/auth_provider.dart';
-import '../providers/habit_provider.dart';
-import '../models/models.dart';
-import '../widgets/fasting_timer_ring.dart';
-import '../widgets/health_recovery_timeline.dart';
-import '../widgets/metabolic_dashboard.dart';
-import 'workout_setup_screen.dart';
+import '../../config/theme.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/habit_provider.dart';
+import '../../models/models.dart';
+import '../../widgets/fasting_timer_ring.dart';
+import '../../widgets/health_recovery_timeline.dart';
+import '../../widgets/metabolic_dashboard.dart';
+import '../workouts/workout_setup_screen.dart';
 import 'stats_screen.dart';
-import 'sugar_detail_screen.dart';
-import 'no_smoke_screen.dart';
+import '../habits/sugar_detail_screen.dart';
+import '../habits/no_smoke_screen.dart';
 
 const _fastingPresets = {
   '16:8': 16 * 60,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../providers/habit_provider.dart';
-import '../models/models.dart';
+import '../../config/theme.dart';
+import '../../providers/habit_provider.dart';
+import '../../models/models.dart';
 
 class SugarDetailScreen extends ConsumerStatefulWidget {
   const SugarDetailScreen({super.key});

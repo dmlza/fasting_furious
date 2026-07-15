@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../config/theme.dart';
-import '../models/exercise.dart';
+import '../../config/theme.dart';
+import '../../models/exercise.dart';
 import 'exercise_list_screen.dart';
 import 'workout_player_screen.dart';
 

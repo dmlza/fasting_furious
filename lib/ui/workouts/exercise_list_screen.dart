@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../config/theme.dart';
-import '../models/exercise.dart';
+import '../../config/theme.dart';
+import '../../models/exercise.dart';
 
 class ExerciseListScreen extends StatefulWidget {
   final WorkoutCategory category;

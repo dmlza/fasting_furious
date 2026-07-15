@@ -4,6 +4,23 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
+### Architecture (from Flutter samples review)
+- [x] Extract AuthGate, MainShell, ProfileLoader from main.dart into lib/ui/auth/ and lib/ui/shell/
+- [ ] Split SupabaseService into per-entity repositories (auth, feed, habits, friends, notifications, workouts)
+- [ ] Add abstract repository interfaces for testability
+- [ ] Add sealed Result<T> type for error handling across repositories
+- [ ] Add Command pattern for async operation lifecycle (running/completed/error)
+- [x] Group screens into feature folders: lib/ui/auth/, lib/ui/feed/, lib/ui/habits/, lib/ui/profile/, lib/ui/workouts/
+- [ ] Add shared test infrastructure in testing/ directory (mocks, fakes, fixtures)
+
+### Theme & UI Improvements
+- [x] Split theme.dart into colors.dart, theme.dart, dimens.dart (compass_app pattern)
+- [x] Add ThemeExtension for glassmorphism properties (TagChipTheme pattern)
+- [x] Add responsive Dimens class with mobile/desktop switching
+- [x] Add proper onPrimary/onSecondary to ColorScheme for text contrast
+- [ ] Add custom checkbox widget (compass_app pattern) for habit tracking
+- [ ] Refine glassmorphism to use ClipRRect + BackdropFilter consistently
+
 ### Exercise & Workout Improvements
 - [ ] Add progress bar to exercise bento tile (visual toward 30min goal)
 - [ ] Show today's completed exercises in bento tile (replace "Today's Workout" label)

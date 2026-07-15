@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../config/theme.dart';
-import '../models/exercise.dart';
+import '../../config/theme.dart';
+import '../../models/exercise.dart';
 import 'workout_summary_screen.dart';
 
 class WorkoutPlayerScreen extends StatefulWidget {

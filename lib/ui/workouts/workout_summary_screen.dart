@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../models/exercise.dart';
-import '../providers/auth_provider.dart';
-import '../providers/habit_provider.dart';
+import '../../config/theme.dart';
+import '../../models/exercise.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/habit_provider.dart';
 
 class WorkoutSummaryScreen extends ConsumerStatefulWidget {
   final int targetMinutes;

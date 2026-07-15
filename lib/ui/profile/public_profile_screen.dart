@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme.dart';
-import '../models/models.dart';
-import '../providers/auth_provider.dart';
-import 'activity_detail_screen.dart';
+import '../../config/theme.dart';
+import '../../models/models.dart';
+import '../../providers/auth_provider.dart';
+import '../workouts/activity_detail_screen.dart';
 
 class PublicProfileScreen extends ConsumerStatefulWidget {
   final String userId;
