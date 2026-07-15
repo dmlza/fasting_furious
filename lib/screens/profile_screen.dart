@@ -8,7 +8,6 @@ import '../providers/habit_provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/friends_provider.dart';
 import '../widgets/skeleton.dart';
-import 'stats_screen.dart';
 import 'workout_history_screen.dart';
 import 'activity_detail_screen.dart';
 import '../config/page_transitions.dart';
@@ -30,7 +29,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   List<Post> _myPosts = [];
   bool _loadingPosts = true;
   bool _initialLoading = true;
-  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -106,7 +104,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
   Widget build(BuildContext context) {
     final profile = ref.watch(profileProvider);
     final friends = ref.watch(friendsProvider);
-    final themeMode = ref.watch(themeProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -119,6 +116,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
+          IconButton(
+            onPressed: () => _showSettingsSheet(context),
+            icon: const Icon(Icons.settings_outlined, size: 20),
+          ),
           IconButton(
             onPressed: () async {
               final confirmed = await showDialog<bool>(
@@ -239,84 +240,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
         ),
         const SizedBox(height: 16),
 
-        // Tab bar
-        Container(
+        // Posts
+        if (_loadingPosts)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (_myPosts.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
-            padding: const EdgeInsets.all(4),
-            child: Row(
-              children: [
-                _TabButton(
-                  label: 'Posts',
-                  isSelected: _selectedTab == 0,
-                  onTap: () => setState(() => _selectedTab = 0),
-                ),
-                _TabButton(
-                  label: 'Settings',
-                  isSelected: _selectedTab == 1,
-                  onTap: () => setState(() => _selectedTab = 1),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 12),
-
-        // Tab content
-        if (_selectedTab == 0) ...[
-          // Posts grid
-          if (_loadingPosts)
-            const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (_myPosts.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.network(
-                        'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=120&fit=crop',
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=200&h=120&fit=crop',
+                      height: 100,
+                      width: 160,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
                         height: 100,
                         width: 160,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 100,
-                          width: 160,
-                          decoration: BoxDecoration(
-                            color: AppColors.purple.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(Icons.article_outlined, size: 32, color: AppColors.textTertiary),
+                        decoration: BoxDecoration(
+                          color: AppColors.purple.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
                         ),
+                        child: Icon(Icons.article_outlined, size: 32, color: AppColors.textTertiary),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text('No posts yet', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text('Share your progress!', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('No posts yet', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text('Share your progress!', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                ],
               ),
-            )
-          else
-            ..._myPosts.map((post) => _buildPostCard(post, theme)),
-        ],
-
-        if (_selectedTab == 1) ...[
-          // Settings content
-          _buildSettingsSection(theme, themeMode),
-        ],
+            ),
+          )
+        else
+          ..._myPosts.map((post) => _buildPostCard(post, theme)),
 
         // Edit form
         if (_editing) ...[
@@ -430,251 +399,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
     );
   }
 
-  Widget _buildSettingsSection(ThemeData theme, ThemeMode themeMode) {
-    return Column(
-      children: [
-        // Theme toggle
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.purple.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.dark_mode_outlined, color: AppColors.purple, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    Text(
-                      'Toggle dark/light mode',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: themeMode == ThemeMode.dark,
-                activeThumbColor: Colors.white,
-                activeTrackColor: AppColors.purple,
-                onChanged: (_) => ref.read(themeProvider.notifier).toggle(),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Stats button
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: InkWell(
-            onTap: () {
-              Navigator.of(context).push(FadeRoute(page: const StatsScreen()));
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.bar_chart, color: AppColors.purple, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Statistics', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text(
-                          'View your fasting history & streaks',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Workout History button
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: InkWell(
-            onTap: () {
-              Navigator.of(context).push(FadeRoute(page: const WorkoutHistoryScreen()));
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.green.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.fitness_center, color: AppColors.green, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Workout History', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text(
-                          'View past workouts and progress',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Seed demo accounts
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: InkWell(
-            onTap: () async {
-              try {
-                final svc = ref.read(supabaseServiceProvider);
-                await svc.resetSeedFlag();
-                await svc.ensureSeedAccounts();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Demo accounts created! Search for Eric or Ariel.')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              }
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.purple.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.person_add, color: AppColors.purple, size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Seed Demo Accounts', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                        Text(
-                          'Create Eric & Ariel profiles',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Danger zone
-        Text(
-          'DANGER ZONE',
-          style: TextStyle(fontSize: 11, color: AppColors.textTertiary, letterSpacing: 1.5, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFB7185).withValues(alpha: 0.3)),
-          ),
-          child: InkWell(
-            onTap: _confirmDeleteAccount,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFB7185).withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.delete_forever, color: Color(0xFFFB7185), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFFFB7185))),
-                        Text(
-                          'Permanently delete your account and all data',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   int _getMaxStreak() {
     int max = 0;
     for (final h in ['exercise', 'no_sugar', 'no_smoking']) {
@@ -682,6 +406,121 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
       if (s > max) max = s;
     }
     return max;
+  }
+
+  void _showSettingsSheet(BuildContext context) {
+    final themeMode = ref.read(themeProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(color: AppColors.textTertiary, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 20),
+            // Theme toggle
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.dark_mode_outlined, color: AppColors.purple, size: 20),
+              ),
+              title: const Text('Dark Mode', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              trailing: Switch(
+                value: themeMode == ThemeMode.dark,
+                activeThumbColor: Colors.white,
+                activeTrackColor: AppColors.purple,
+                onChanged: (_) => ref.read(themeProvider.notifier).toggle(),
+              ),
+            ),
+            const Divider(height: 1),
+            // Workout History
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.fitness_center, color: AppColors.green, size: 20),
+              ),
+              title: const Text('Workout History', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              trailing: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).push(FadeRoute(page: const WorkoutHistoryScreen()));
+              },
+            ),
+            const Divider(height: 1),
+            // Seed Demo Accounts
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.purple.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.person_add, color: AppColors.purple, size: 20),
+              ),
+              title: const Text('Seed Demo Accounts', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              subtitle: Text('Create Eric & Ariel profiles', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              trailing: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                try {
+                  final svc = ref.read(supabaseServiceProvider);
+                  await svc.resetSeedFlag();
+                  await svc.ensureSeedAccounts();
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Demo accounts created! Search for Eric or Ariel.')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                  }
+                }
+              },
+            ),
+            const Divider(height: 1),
+            // Delete Account
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFB7185).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.delete_forever, color: Color(0xFFFB7185), size: 20),
+              ),
+              title: const Text('Delete Account', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFFFB7185))),
+              subtitle: Text('Permanently delete your account', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              trailing: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textTertiary),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _confirmDeleteAccount();
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   void _confirmDeleteAccount() {
@@ -839,51 +678,6 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(label, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TabButton({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).colorScheme.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected ? [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                offset: const Offset(0, 2),
-                blurRadius: 4,
-              ),
-            ] : [],
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              color: isSelected ? AppColors.purple : AppColors.textSecondary,
-            ),
-          ),
         ),
       ),
     );

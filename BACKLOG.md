@@ -4,7 +4,6 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
-- [ ] Remove redundant Settings tab from profile (stats already visible at home)
 - [ ] Fix friends button centering in search results for seeded accounts
 - [ ] Add sample posts to seeded demo accounts (portfolio display)
 - [ ] Show friend count and add-friend button on seeded profiles
@@ -27,6 +26,7 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## Done
 
+- [x] Remove redundant Settings tab from profile (stats already visible at home)
 - [x] Remove entrance animations from profile screen
 - [x] Move CreatePostScreen out of main.dart to lib/screens/create_post_screen.dart
 - [x] Fasting timer (16:8, 18:6, 20:4)
