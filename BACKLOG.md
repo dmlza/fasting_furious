@@ -24,6 +24,7 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## Done
 
+- [x] Add more sample posts to seeded demo accounts for portfolio display
 - [x] Fix friend request button centering on friends screen
 - [x] Fix friends button centering on public profiles
 - [x] Remove redundant Settings tab from profile (stats already visible at home)

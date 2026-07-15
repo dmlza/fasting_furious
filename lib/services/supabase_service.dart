@@ -204,6 +204,8 @@ class SupabaseService {
         {'user_id': ericId, 'type': 'fasting', 'content': 'Starting a 24hr fast. Wish me luck. Water and electrolytes only.', 'created_at': DateTime.now().subtract(const Duration(days: 5, hours: 8)).toIso8601String()},
         {'user_id': ericId, 'type': 'exercise', 'content': 'Pull day: deadlifts, rows, bicep curls. Back is feeling strong.', 'created_at': DateTime.now().subtract(const Duration(days: 6)).toIso8601String()},
         {'user_id': ericId, 'type': 'fasting_complete', 'content': '24hr fast complete! First one ever. Refeeding carefully tonight.', 'created_at': DateTime.now().subtract(const Duration(days: 6, hours: 4)).toIso8601String()},
+        {'user_id': ericId, 'type': 'general', 'content': 'New PR on bench press: 185lbs. Fasting + strength training = gains.', 'created_at': DateTime.now().subtract(const Duration(hours: 5)).toIso8601String()},
+        {'user_id': ericId, 'type': 'exercise', 'content': 'Quick 20min HIIT session before work. No excuse to skip.', 'created_at': DateTime.now().subtract(const Duration(hours: 10)).toIso8601String()},
       ]);
 
       // Seed posts for Ariel
@@ -213,6 +215,8 @@ class SupabaseService {
         {'user_id': arielId, 'type': 'exercise', 'content': 'Morning run done before sunrise. 5K in 24min.', 'created_at': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
         {'user_id': arielId, 'type': 'general', 'content': 'Week 3 of 20:4. Sleep has improved dramatically. No more 2am wakes.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
         {'user_id': arielId, 'type': 'fasting', 'content': 'Currently fasting. 14 hours in. Black coffee is keeping me going.', 'created_at': DateTime.now().subtract(const Duration(hours: 6)).toIso8601String()},
+        {'user_id': arielId, 'type': 'general', 'content': 'Coach tip: Hydrate before you feel thirsty. Water is your fasting ally.', 'created_at': DateTime.now().subtract(const Duration(hours: 4)).toIso8601String()},
+        {'user_id': arielId, 'type': 'workout_complete', 'content': 'Strength training done. Squats, deadlifts, rows. Feeling powerful.', 'created_at': DateTime.now().subtract(const Duration(hours: 9)).toIso8601String()},
       ]);
 
       // Seed posts for Marcus
@@ -224,6 +228,8 @@ class SupabaseService {
         {'user_id': marcusId, 'type': 'fasting', 'content': 'Hour 16 of 18. The last 2 hours are always the mental game.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
         {'user_id': marcusId, 'type': 'exercise', 'content': 'Easy recovery run. 5K at conversational pace. Legs still sore from yesterday.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
         {'user_id': marcusId, 'type': 'general', 'content': 'PR on my 5K: 19:47. Under 20 min for the first time! Fasting + consistent training = results.', 'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'exercise', 'content': 'Long run Sunday: 15 miles. Negative splits. Fasted state is my secret weapon.', 'created_at': DateTime.now().subtract(const Duration(hours: 6)).toIso8601String()},
+        {'user_id': marcusId, 'type': 'fasting_complete', 'content': '18:6 window closed. Refueled with protein and carbs. Ready for tomorrow.', 'created_at': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String()},
       ]);
 
       // Seed posts for Priya
@@ -234,6 +240,8 @@ class SupabaseService {
         {'user_id': priyaId, 'type': 'general', 'content': 'Teaching my first class since starting IF. Students noticed the change in my energy. Sharing the practice.', 'created_at': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()},
         {'user_id': priyaId, 'type': 'fasting', 'content': 'Hour 12. Deep breathing through the hunger. It\'s just a wave. It passes.', 'created_at': DateTime.now().subtract(const Duration(hours: 4)).toIso8601String()},
         {'user_id': priyaId, 'type': 'general', 'content': 'Day 60 no sugar. My skin is glowing. Cravings are gone. This is freedom.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'fasting_complete', 'content': '16:8 complete. Breaking fast with a green smoothie. Nourish to flourish.', 'created_at': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String()},
+        {'user_id': priyaId, 'type': 'exercise', 'content': 'Morning yoga flow. 30min of sun salutations. The perfect way to start the day.', 'created_at': DateTime.now().subtract(const Duration(hours: 7)).toIso8601String()},
       ]);
 
       // Seed posts for Jake
@@ -246,6 +254,8 @@ class SupabaseService {
         {'user_id': jakeId, 'type': 'exercise', 'content': 'First time in a gym in 2 years. Just did machines. Felt good to be back.', 'created_at': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
         {'user_id': jakeId, 'type': 'general', 'content': 'My wife started fasting too. Couple goals. Accountability is everything.', 'created_at': DateTime.now().subtract(const Duration(days: 4)).toIso8601String()},
         {'user_id': jakeId, 'type': 'general', 'content': 'Scale said 274 this morning. Started at 280. 6lbs down. Small wins.', 'created_at': DateTime.now().subtract(const Duration(days: 5)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'exercise', 'content': 'Walked 12K steps today. Progress is progress. Keep moving.', 'created_at': DateTime.now().subtract(const Duration(hours: 4)).toIso8601String()},
+        {'user_id': jakeId, 'type': 'fasting_complete', 'content': '16:8 done! Meal prepped for the week. Staying consistent.', 'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String()},
       ]);
 
       // Seed habits for last 7 days
