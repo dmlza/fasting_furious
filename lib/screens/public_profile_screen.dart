@@ -27,6 +27,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
   bool _isFriend = false;
   bool _requestSent = false;
   int _postCount = 0;
+  int _friendCount = 0;
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     final user = ref.read(currentUserProvider);
     await Future.wait([
       _fetchPosts(),
+      _fetchFriendCount(),
       if (user != null) _checkFriendship(user.id),
     ]);
     if (mounted) setState(() => _loading = false);
@@ -60,6 +62,13 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
     } catch (_) {
       if (mounted) setState(() { _loading = false; });
     }
+  }
+
+  Future<void> _fetchFriendCount() async {
+    try {
+      final count = await ref.read(supabaseServiceProvider).getFriendCount(widget.userId);
+      if (mounted) setState(() => _friendCount = count);
+    } catch (_) {}
   }
 
   Future<void> _checkFriendship(String currentUserId) async {
@@ -163,10 +172,9 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _StatPill(value: '$_postCount', label: 'Posts'),
+                            _StatPill(value: '$_friendCount', label: 'Friends'),
                             const SizedBox(width: 16),
-                            if (isSelf)
-                              _StatPill(value: '', label: ''),
+                            _StatPill(value: '$_postCount', label: 'Posts'),
                           ],
                         ),
                         const SizedBox(height: 16),

@@ -4,7 +4,6 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
-- [ ] Show friend count and add-friend button on seeded profiles
 - [ ] Add direct navigation button to Stats from HomeScreen appbar
 - [ ] Add error logging to silent catch blocks in habit_provider.dart
 - [ ] Add haptic feedback on timer start/stop
@@ -24,6 +23,7 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## Done
 
+- [x] Show friend count on public profiles
 - [x] Add more sample posts to seeded demo accounts for portfolio display
 - [x] Fix friend request button centering on friends screen
 - [x] Fix friends button centering on public profiles
