@@ -119,6 +119,15 @@ refactor: move CreatePostScreen out of main.dart
 chore: remove unused imports from profile_screen.dart
 ```
 
+## Git Rules
+
+Key points:
+- Only stage files related to the current task
+- Never `git add .` without reviewing what's staged
+- Check `git status` before every commit
+- Never force push to main
+- Never amend or squash pushed commits
+
 ## When Starting a Session
 
 1. Read this file (AGENTS.md)
