@@ -147,6 +147,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         CircleAvatar(
                           radius: 40,

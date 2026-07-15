@@ -4,7 +4,6 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
-- [ ] Fix friends button centering in search results for seeded accounts
 - [ ] Add sample posts to seeded demo accounts (portfolio display)
 - [ ] Show friend count and add-friend button on seeded profiles
 - [ ] Add direct navigation button to Stats from HomeScreen appbar
@@ -26,6 +25,7 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## Done
 
+- [x] Fix friends button centering on public profiles
 - [x] Remove redundant Settings tab from profile (stats already visible at home)
 - [x] Remove entrance animations from profile screen
 - [x] Move CreatePostScreen out of main.dart to lib/screens/create_post_screen.dart
