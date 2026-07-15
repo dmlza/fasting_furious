@@ -33,6 +33,10 @@ After each change, run the app and test the specific thing you changed. Don't st
 
 Keep a running list of things to fix. Don't fix them mid-task. This prevents scope creep.
 
+### Rule 7: Commit everything together
+
+Code changes and backlog updates for the same task go in one commit. One task = one commit.
+
 ## Code Conventions
 
 - **State management:** Riverpod (`StateNotifierProvider` pattern)

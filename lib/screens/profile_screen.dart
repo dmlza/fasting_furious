@@ -155,9 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
       children: [
         // Profile header card
-        FadeInDown(
-          duration: const Duration(milliseconds: 500),
-          child: Container(
+        Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
@@ -227,30 +225,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               ],
             ),
           ),
-        ),
         const SizedBox(height: 12),
 
         // Stats row
-        FadeInUp(
-          duration: const Duration(milliseconds: 500),
-          delay: const Duration(milliseconds: 100),
-          child: Row(
-            children: [
-              _StatCard(value: '${friends.friends.length}', label: 'Friends', icon: Icons.people_outline),
-              const SizedBox(width: 8),
-              _StatCard(value: '${_getMaxStreak()}', label: 'Streak', icon: Icons.local_fire_department_outlined),
-              const SizedBox(width: 8),
-              _StatCard(value: '$_postCount', label: 'Posts', icon: Icons.article_outlined),
-            ],
-          ),
+        Row(
+          children: [
+            _StatCard(value: '${friends.friends.length}', label: 'Friends', icon: Icons.people_outline),
+            const SizedBox(width: 8),
+            _StatCard(value: '${_getMaxStreak()}', label: 'Streak', icon: Icons.local_fire_department_outlined),
+            const SizedBox(width: 8),
+            _StatCard(value: '$_postCount', label: 'Posts', icon: Icons.article_outlined),
+          ],
         ),
         const SizedBox(height: 16),
 
         // Tab bar
-        FadeInUp(
-          duration: Duration(milliseconds: 400),
-          delay: Duration(milliseconds: 150),
-          child: Container(
+        Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
@@ -271,7 +261,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with SingleTicker
               ],
             ),
           ),
-        ),
         const SizedBox(height: 12),
 
         // Tab content
