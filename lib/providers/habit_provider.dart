@@ -87,7 +87,9 @@ class HabitNotifier extends StateNotifier<HabitState> {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getStringList('ff_grid_layout');
       if (saved != null) state = state.copyWith(gridLayout: saved);
-    } catch (_) {}
+    } catch (e) {
+      assert(() { print('[habit_provider] _loadGridLayout error: $e'); return true; }());
+    }
   }
 
   void setEditingGrid(bool editing) => state = state.copyWith(isEditingGrid: editing);
@@ -119,7 +121,9 @@ class HabitNotifier extends StateNotifier<HabitState> {
     try {
       final data = await ref.read(supabaseServiceProvider).fetchHabits(userId, _today);
       if (data != null) state = state.copyWith(habits: Habit.fromMap(data));
-    } catch (_) {}
+    } catch (e) {
+      assert(() { print('[habit_provider] fetchHabits error: $e'); return true; }());
+    }
   }
 
   Future<void> fetchHabitHistory(String userId) async {
@@ -128,14 +132,18 @@ class HabitNotifier extends StateNotifier<HabitState> {
       state = state.copyWith(
         history: data.map((d) => HabitHistory.fromMap(d)).toList(),
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() { print('[habit_provider] fetchHabitHistory error: $e'); return true; }());
+    }
   }
 
   Future<void> fetchActiveTimer(String userId) async {
     try {
       final data = await ref.read(supabaseServiceProvider).fetchActiveTimer(userId);
       state = state.copyWith(activeTimer: data != null ? ActiveTimer.fromMap(data) : null);
-    } catch (_) {}
+    } catch (e) {
+      assert(() { print('[habit_provider] fetchActiveTimer error: $e'); return true; }());
+    }
   }
 
   void setActiveTimer(ActiveTimer? timer) => state = state.copyWith(activeTimer: timer);
@@ -146,7 +154,9 @@ class HabitNotifier extends StateNotifier<HabitState> {
       state = state.copyWith(
         smokingLog: data.map((d) => SmokingLog.fromMap(d)).toList(),
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() { print('[habit_provider] fetchSmokingLog error: $e'); return true; }());
+    }
   }
 
   Future<bool> toggleHabit(String userId, String habit) async {
