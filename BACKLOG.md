@@ -4,6 +4,13 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
+### Exercise & Workout Improvements
+- [ ] Add progress bar to exercise bento tile (visual toward 30min goal)
+- [ ] Show today's completed exercises in bento tile (replace "Today's Workout" label)
+- [ ] Add workout summary modal after completing a workout
+- [ ] Show recent workout stats in exercise modal (last workout info)
+
+### General
 - [ ] Add haptic feedback on timer start/stop
 - [ ] Add water intake tracking with daily goal
 - [ ] Add weight tracking with weekly log and progress chart
