@@ -11,6 +11,7 @@ import '../widgets/fasting_timer_ring.dart';
 import '../widgets/health_recovery_timeline.dart';
 import '../widgets/metabolic_dashboard.dart';
 import 'workout_setup_screen.dart';
+import 'stats_screen.dart';
 import 'sugar_detail_screen.dart';
 import 'no_smoke_screen.dart';
 
@@ -107,6 +108,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StatsScreen()),
+              );
+            },
+            icon: const Icon(Icons.bar_chart, size: 22),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

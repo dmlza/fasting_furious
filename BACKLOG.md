@@ -4,7 +4,6 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## To Do
 
-- [ ] Add direct navigation button to Stats from HomeScreen appbar
 - [ ] Add error logging to silent catch blocks in habit_provider.dart
 - [ ] Add haptic feedback on timer start/stop
 - [ ] Add water intake tracking with daily goal
@@ -23,6 +22,7 @@ Track tasks here. Move completed ones to Done. One line per task.
 
 ## Done
 
+- [x] Add direct navigation button to Stats from HomeScreen appbar
 - [x] Show friend count on public profiles
 - [x] Add more sample posts to seeded demo accounts for portfolio display
 - [x] Fix friend request button centering on friends screen
